@@ -1,13 +1,24 @@
+# 读取 data 文件夹下的 CSV 文件并显示基本信息和统计数据
+
 from pathlib import Path
 import pandas as pd
 
-#1.找到data文件夹
+# 找到 data 文件夹
 data_path = Path(__file__).resolve().parent.parent / "data"
 
-#2.找到csv文件
-file_path = data_path / "test.csv"
+# 循环读取 CSV 文件
+for file in data_path.glob("*.csv"):
+    print(f"=== 读取文件: {file.name} ===")
+    
+    # 读取数据
+    df = pd.read_csv(file)
+    
+    print("=== 前五行数据 ===")
+    print(df.head())
 
-df = pd.read_csv(file_path)
+    print("\n=== 数据基本信息 ===")
+    df.info()
 
-print(df.head())
-print("数据读取成功")
+    print("\n=== 数值统计 ===")
+    print(df.describe())
+

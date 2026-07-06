@@ -1,0 +1,3 @@
+Hello ChatGPT!
+I'm learning Python.
+Today is Day 2.
