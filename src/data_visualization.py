@@ -1,26 +1,12 @@
 import pandas as pd
-from pathlib import Path
+import utils
 import matplotlib.pyplot as plt
 
 def main():
     # =========================
-    # 路径
-    # =========================
-
-    project_path = Path(__file__).resolve().parent.parent
-
-    data_path = project_path / "data"
-    output_path = project_path / "output"
-
-    output_path.mkdir(exist_ok=True)
-
-    # =========================
     # 读取数据
     # =========================
-
-    file_path = data_path / "stock_data_cleaned.csv"
-
-    df = pd.read_csv(file_path)
+    df = utils.load_csv("stock_data_cleaned.csv", "output")
 
     # 日期转换
     df["date"] = pd.to_datetime(df["date"])
@@ -75,10 +61,9 @@ def main():
 
     plt.tight_layout()
 
-    plt.savefig(
-        output_path / "daily_average_price.png",
-        dpi=300,
-        bbox_inches="tight"
+    utils.save_plot(
+        plt.gcf(),
+        "daily_average_price.png",
     )
 
     plt.show()
@@ -105,10 +90,9 @@ def main():
 
     plt.tight_layout()
 
-    plt.savefig(
-        output_path / "sector_average_price.png",
-        dpi=300,
-        bbox_inches="tight"
+    utils.save_plot(
+        plt.gcf(),
+        "sector_average_price.png",
     )
 
     plt.show()
@@ -132,10 +116,9 @@ def main():
 
     plt.tight_layout()
 
-    plt.savefig(
-        output_path / "price_distribution.png",
-        dpi=300,
-        bbox_inches="tight"
+    utils.save_plot(
+        plt.gcf(),
+        "price_distribution.png",
     )
 
     plt.show()
@@ -158,10 +141,9 @@ def main():
 
     plt.tight_layout()
 
-    plt.savefig(
-        output_path / "price_vs_volume.png",
-        dpi=300,
-        bbox_inches="tight"
+    utils.save_plot(
+        plt.gcf(),
+        "price_vs_volume.png",
     )
 
     plt.show()
@@ -188,17 +170,16 @@ def main():
 
     plt.tight_layout()
 
-    plt.savefig(
-        output_path / "sector_average_volume.png",
-        dpi=300,
-        bbox_inches="tight"
+    utils.save_plot(
+        plt.gcf(),
+        "sector_average_volume.png",
     )
 
     plt.show()
     plt.close()
 
     print("\n========== 可视化完成 ==========")
-    print(f"图片已保存到：{output_path}")
+    print(f"图片已保存到：{utils.get_output_path()}")
 
 
 if __name__ == "__main__":

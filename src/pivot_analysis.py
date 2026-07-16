@@ -1,22 +1,11 @@
 import pandas as pd
-from pathlib import Path
+import utils
 
 def main():
     # =========================
-    # 路径
-    # =========================
-    project_path = Path(__file__).resolve().parent.parent
-
-    data_path = project_path / "data"
-    output_path = project_path / "output"
-
-    file_path = data_path / "stock_data_cleaned.csv"
-    output_path.mkdir(exist_ok=True)
-
-    # =========================
     # 读取数据
     # =========================
-    df = pd.read_csv(file_path)
+    df = utils.load_csv("stock_data_cleaned.csv", "output")
     print("\n========== 数据预览 ==========")
     print(df.head())
 
@@ -76,12 +65,16 @@ def main():
     # =========================
     # 保存结果
     # =========================
-    sector_summary_table.to_csv(output_path / "sector_summary.csv")
-    pivot_market_table.to_csv(output_path / "pivot_market_table.csv")
-
-    print("\nPivot Market Table 已保存到 output/pivot_market_table.csv")
-    print("\nSector Summary 已保存到 output/sector_summary.csv")
-
-
+    utils.save_csv(
+        sector_summary_table,
+        "sector_summary.csv",
+        index=True
+    )
+    utils.save_csv(
+        pivot_market_table,
+        "pivot_market_table.csv",
+        index=True
+    )
+    
 if __name__ == "__main__":
     main()

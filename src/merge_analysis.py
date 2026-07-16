@@ -1,16 +1,12 @@
 import pandas as pd
-from pathlib import Path
+import utils
 
 def main():
     # ==========================
     # 读取数据
     # ==========================
-    project_path = Path(__file__).resolve().parent.parent
-    
-    data_path = project_path / "data"
-    
-    stock_df = pd.read_csv(data_path / "stock_data_cleaned.csv")
-    company_df = pd.read_csv(data_path / "company_info.csv")
+    stock_df = utils.load_csv("stock_data_cleaned.csv", "output")
+    company_df = utils.load_csv("company_info.csv", "data")
 
     print("\n========== 股票数据预览 ==========")
     print(stock_df.head())
@@ -60,16 +56,11 @@ def main():
     # =========================
     # 保存合并后的数据
     # =========================
-    output_path = project_path / "output"
-    output_path.mkdir(exist_ok=True)
-
-    merged_left_df.to_csv(
-        output_path / "merged_data.csv",
-        index=False
+    utils.save_csv(
+        merged_left_df,
+        "merged_data.csv",
+        index=False,
     )
-
-    print("\n========== 保存成功 ==========")
-    print(output_path / "merged_data.csv")
 
 if __name__ == "__main__":
     main()

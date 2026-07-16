@@ -1,26 +1,12 @@
 import pandas as pd
-from pathlib import Path
+import utils
 
 def main():
     # =========================
-    # 路径
-    # =========================
-
-    project_path = Path(__file__).resolve().parent.parent
-
-    data_path = project_path / "data"
-    output_path = project_path / "output"
-
-    output_path.mkdir(exist_ok=True)
-
-    # =========================
     # 读取数据
     # =========================
-
-    file_path = data_path / "stock_data_cleaned.csv"
-
-    df = pd.read_csv(file_path)
-
+    df = utils.load_csv("stock_data_cleaned.csv", "output")
+    
     # 日期转换
     df["date"] = pd.to_datetime(df["date"])
 
@@ -123,16 +109,11 @@ def main():
     # 保存分析结果
     # =========================
 
-    output_file = output_path / "sector_analysis.csv"
-
-    result_sorted.to_csv(
-        output_file,
-        index=False
+    utils.save_csv(
+        result_sorted,
+        "sector_analysis.csv",
+        index=False,
     )
-
-    print("\n========== 分析完成 ==========")
-    print(f"分析结果已保存至：{output_file}")
-
 
 if __name__ == "__main__":
     main()

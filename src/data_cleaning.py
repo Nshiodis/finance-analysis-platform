@@ -1,14 +1,11 @@
 import pandas as pd
-from pathlib import Path
+import utils
 
 def main():
     # =========================
     # 读取数据
     # =========================
-    data_path = Path(__file__).resolve().parent.parent / "data"
-    input_file = data_path / "stock_data.csv"
-
-    df = pd.read_csv(input_file)
+    df = utils.load_csv("stock_data.csv", "data")
 
     print("\n========== 原始数据 ==========")
     print(df.head())
@@ -104,12 +101,13 @@ def main():
     # =========================
     # 保存数据
     # =========================
-    output_file = data_path / "stock_data_cleaned.csv"
-
-    df.to_csv(output_file, index=False)
+    utils.save_csv(
+        df,
+        "stock_data_cleaned.csv",
+        index=False,
+    )
 
     print("\n========== 数据清洗完成 ==========")
-    print(f"文件已保存至：{output_file}")
 
 
 if __name__ == "__main__":

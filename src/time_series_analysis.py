@@ -1,16 +1,13 @@
 import pandas as pd
-from pathlib import Path
 import matplotlib.pyplot as plt
+import utils
 
 def main():
     # ==============
     # 读取数据
     # ==============
 
-    project_path = Path(__file__).resolve().parent.parent
-    data_path = project_path / "output"
-
-    df = pd.read_csv(data_path / "merged_data.csv")
+    df = utils.load_csv("merged_data.csv")
 
     print("\n前五行数据")
     print(df.head())
@@ -65,25 +62,23 @@ def main():
     # ==============
     # 保存结果
     # ==============
-    output_path = project_path / "output"
-    output_path.mkdir(exist_ok=True)
-    df.to_csv(
-        output_path / "time_series_data.csv",
-        index=True
+    utils.save_csv(
+        df, 
+        "time_series_data.csv", 
+        index=True,
     )
-    print("保存成功")
 
     # ==============
     # 画出价格和移动平均线
     # ==============
-    plt.figure(figsize=(10,6))
+    plt.figure(figsize=(10, 6))
     plt.plot(df.index, df["price"], label="Price")
     plt.plot(df.index, df["price_ma3"], label="MA3")
     plt.legend()
     plt.xticks(rotation=45)
     plt.tight_layout()
 
-    plt.savefig(output_path / "price_ma3.png")
+    utils.save_plot(plt.gcf(), "price_ma3.png")
     plt.show()
     plt.close()
 
