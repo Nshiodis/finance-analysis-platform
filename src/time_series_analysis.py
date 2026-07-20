@@ -1,4 +1,3 @@
-import pandas as pd
 import matplotlib.pyplot as plt
 from stock_data import StockData
 
@@ -19,7 +18,7 @@ def main():
     # ==============
     stock.to_datetime("date")
     print("\n转换后的数据类型")
-    stock.dtypes()
+    print(stock.dtypes())
 
     # ==============
     # 设置时间索引
