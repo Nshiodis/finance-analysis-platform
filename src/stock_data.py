@@ -4,9 +4,9 @@ import utils
 class StockData:
     """股票数据对象"""
 
-    def __init__(self, file_name: str):
+    def __init__(self, file_name: str, folder: str = "output"):
         self.file_name = file_name
-        self.df = utils.load_csv(file_name)
+        self.df = utils.load_csv(file_name, folder)
 
     def info(self):
         """查看数据基本信息"""
