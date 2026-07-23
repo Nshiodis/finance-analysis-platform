@@ -1,6 +1,7 @@
 import pandas as pd
 import indicators
 import utils
+import matplotlib.pyplot as plt
 
 class StockData:
     """股票数据对象"""
@@ -8,6 +9,7 @@ class StockData:
     def __init__(self, file_name: str, folder: str = "output"):
         self.file_name = file_name
         self.df = utils.load_csv(file_name, folder)
+        self.raw_columns = self.df.columns.tolist()
 # =============================================================================
 # 数据基本信息
 # =============================================================================
@@ -31,7 +33,11 @@ class StockData:
     def head(self, n: int = 5):
         """查看数据前几行"""
         return self.df.head(n)
-
+    
+    def tail(self, n: int = 5):
+        """查看数据后几行"""
+        return self.df.tail(n)
+    
     def dtypes(self):
         """查看各列数据类型"""
         return self.df.dtypes
@@ -69,9 +75,9 @@ class StockData:
 # =============================================================================
 # 数据保存
 # =============================================================================
-    def save_plot(self, fig, file_name):
+    def save_plot(self, file_name: str):
         """保存图表"""
-        utils.save_plot(fig, file_name)
+        utils.save_plot(plt.gcf(), file_name)
         return self
 
     def save_csv(self, file_name: str, index: bool = True):
@@ -82,13 +88,43 @@ class StockData:
 # =============================================================================
 # 技术指标
 # =============================================================================
+    def indicators_info(self):
+        """查看新增指标列名"""
+        print("新增指标列名:")
+        print(
+            [
+                col for col in self.df.columns
+                if col not in self.raw_columns
+            ]
+        )
+    
     def calculate_return(self):
         """计算收益率"""
         self.df = indicators.calculate_return(self.df)
-
+        return self
+    
     def calculate_ma(self, window: int = 20):
         """计算移动平均"""
         self.df = indicators.calculate_ma(
             self.df,
             window
         )
+        return self
+
+    def calculate_rsi(
+            self, 
+            window: int = 14, 
+            method: str = "wilder"
+    ) -> pd.DataFrame:
+        """计算RSI"""
+        self.df = indicators.calculate_rsi(
+            self.df,
+            window,
+            method
+        )
+        return self
+
+    def calculate_macd(self):
+        """计算MACD"""
+        self.df = indicators.calculate_macd(self.df)
+        return self
