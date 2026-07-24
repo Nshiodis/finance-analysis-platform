@@ -197,3 +197,25 @@ def plot_macd(
     utils.save_plot(plt.gcf(), file_name)
 
     plt.show()
+
+
+def plot_compare(stock_pool):
+    """
+    绘制股票池比较收盘价
+    
+    参数:
+        stock_pool: 股票池对象
+    """
+    plt.figure(figsize=(12, 6))
+    for stock in stock_pool.stocks:
+        plt.plot(
+            stock.df.index,
+            stock.df["close"],
+            label=stock.file_name.replace(".csv", "")
+        )
+    plt.title("Close Price Comparison")
+    plt.legend()
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    utils.save_plot(plt.gcf(), "compare_close_price")
+    plt.show()
