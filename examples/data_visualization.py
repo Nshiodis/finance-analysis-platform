@@ -1,5 +1,5 @@
 import pandas as pd
-import utils
+import utils.utils as utils
 import matplotlib.pyplot as plt
 
 def main():

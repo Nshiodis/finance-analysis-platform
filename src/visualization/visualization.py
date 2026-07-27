@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 from matplotlib.patches import Patch
-import utils
+import analysis.risk_analysis as risk_analysis
+import utils.utils as utils
 
 
 def plot_price_indicator(
@@ -114,10 +115,6 @@ def plot_rsi(
 
     plt.title("RSI Indicator")
 
-    plt.title(
-        "RSI Indicator"
-    )
-
     plt.ylim(0,100)
 
     plt.legend()
@@ -218,4 +215,44 @@ def plot_compare(stock_pool):
     plt.xticks(rotation=45)
     plt.tight_layout()
     utils.save_plot(plt.gcf(), "compare_close_price")
+    plt.show()
+
+
+def plot_drawdown(stock):
+    """回撤曲线"""
+    drawdown = risk_analysis.calculate_drawdown(stock.df)
+    max_drawdown = drawdown.min()
+
+    plt.figure(figsize=(12, 6))
+    plt.plot(drawdown.index, drawdown)
+    plt.scatter(
+        drawdown.idxmin(),
+        max_drawdown
+    )
+    plt.title("Drawdown Curve")
+    plt.xlabel("Date")
+    plt.ylabel("Drawdown")
+    plt.grid()
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    utils.save_plot(plt.gcf(), "drawdown_curve")
+    plt.show()
+
+def plot_risk_return(risk_df):
+    plt.figure(figsize=(12,6))
+    plt.scatter(risk_df["volatility"], risk_df["total_return"])
+
+    for i,row in risk_df.iterrows():
+        plt.text(
+            row["volatility"],
+            row["total_return"],
+            row["stock"]
+        )
+
+    plt.xlabel("Volatility")
+    plt.ylabel("Total Return")
+    plt.title("Risk-Return Scatter Plot")
+    plt.grid()
+    plt.tight_layout()
+    utils.save_plot(plt.gcf(), "risk_return")
     plt.show()

@@ -1,11 +1,11 @@
-from stock_data import StockData
+from data.stock_data import StockData
 
 
 class StockPool:
     """股票池"""
 
     def __init__(self, files, folder="data"):
-        self.stocks = []
+        self.stocks: list[StockData] = []
 
         for file in files:
             stock = StockData(
@@ -33,13 +33,9 @@ class StockPool:
         """比较收益"""
         result = []
         for stock in self.stocks:
-            df = stock.df
-            total_return = float(
-                (df["return"] + 1).prod() - 1
-            )
             result.append({
                 "stock": stock.file_name,
-                "total_return": total_return
+                "total_return": stock.calculate_total_return()
             })
         return result
 
@@ -49,3 +45,25 @@ class StockPool:
         result = self.get_summary()
         result.sort(key=lambda x: x["total_return"], reverse=True)
         return result
+
+
+    def compare_risk(self):
+        """比较风险"""
+        result = []
+
+        for stock in self.stocks:
+
+            if "return" not in stock.df.columns:
+                stock.calculate_return()
+
+            risk_info = {
+                "stock": stock.file_name,
+                "total_return": stock.calculate_total_return(),
+                "volatility": stock.calculate_volatility(),
+                "max_drawdown": stock.calculate_max_drawdown(),
+                "sharpe": stock.calculate_sharpe_ratio()
+                }
+            result.append(risk_info)
+
+        return result
+

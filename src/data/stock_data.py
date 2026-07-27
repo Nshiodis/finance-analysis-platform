@@ -1,12 +1,13 @@
 import pandas as pd
-import indicators
+import analysis.indicators as indicators
+import analysis.risk_analysis as risk_analysis
 import utils
 import matplotlib.pyplot as plt
 
 class StockData:
     """股票数据对象"""
 
-    def __init__(self, file_name: str, folder: str = "output"):
+    def __init__(self, file_name: str, folder: str = "data"):
         self.file_name = file_name
         self.df = utils.load_csv(file_name, folder)
         self.raw_columns = self.df.columns.tolist()
@@ -102,6 +103,10 @@ class StockData:
         """计算收益率"""
         self.df = indicators.calculate_return(self.df)
         return self
+
+    def calculate_total_return(self):
+        """计算总收益率"""
+        return indicators.calculate_total_return(self.df)
     
     def calculate_ma(self, window: int = 20):
         """计算移动平均"""
@@ -128,3 +133,21 @@ class StockData:
         """计算MACD"""
         self.df = indicators.calculate_macd(self.df)
         return self
+
+    def calculate_volatility(self):
+        """计算年化波动率"""
+        return risk_analysis.calculate_volatility(
+            self.df
+        )
+
+    def calculate_max_drawdown(self):
+        """计算最大回撤"""
+        return risk_analysis.calculate_max_drawdown(
+            self.df
+        )
+
+    def calculate_sharpe_ratio(self):
+        """计算夏普比率"""
+        return risk_analysis.calculate_sharpe_ratio(
+            self.df
+        )

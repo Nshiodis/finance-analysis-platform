@@ -5,6 +5,16 @@ def calculate_return(df: pd.DataFrame):
     df["return"] = df["close"].pct_change()
     return df
 
+def calculate_total_return(df):
+    """计算总收益率"""
+    total_return =(
+        (1 + df["return"])
+        .cumprod()
+        .iloc[-1]
+        - 1
+    )
+    return total_return
+    
 def calculate_ma(df: pd.DataFrame, window: int = 20):
     """计算移动平均"""
     df[f"MA{window}"] = (
