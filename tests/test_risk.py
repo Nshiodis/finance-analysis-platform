@@ -1,6 +1,6 @@
-from data.stock_pool  import StockPool
-from data.stock_data import StockData
-import visualization.visualization as visualization
+from finance_analysis.data.stock_pool  import StockPool
+from finance_analysis.data.stock_data import StockData
+import finance_analysis.visualization.visualization as visualization
 import pandas as pd
 
 

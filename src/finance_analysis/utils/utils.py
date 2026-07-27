@@ -5,7 +5,7 @@ import pandas as pd
 
 def get_project_path() -> Path:
     """获取项目根目录"""
-    return Path(__file__).resolve().parent.parent
+    return Path(__file__).resolve().parents[3]
 
 def get_data_path() -> Path:
     """获取数据目录"""

@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-from data.stock_data import StockData
+from finance_analysis.data.stock_data import StockData
 
 def main():
     # ==============

@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 from matplotlib.patches import Patch
-import analysis.risk_analysis as risk_analysis
-import utils.utils as utils
+import finance_analysis.analysis.risk_analysis as risk_analysis
+import finance_analysis.utils.utils as utils
 
 
 def plot_price_indicator(

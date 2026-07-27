@@ -22,7 +22,7 @@ def download_stock(
     file_name:
         保存文件名
     """
-    project_path = Path(__file__).resolve().parent.parent
+    project_path = Path(__file__).resolve().parents[3]
 
     data_path = project_path / "data"
 

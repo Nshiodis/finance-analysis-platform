@@ -1,7 +1,7 @@
 import pandas as pd
-import analysis.indicators as indicators
-import analysis.risk_analysis as risk_analysis
-import utils
+import finance_analysis.analysis.indicators as indicators
+import finance_analysis.analysis.risk_analysis as risk_analysis
+import finance_analysis.utils.utils as utils
 import matplotlib.pyplot as plt
 
 class StockData:

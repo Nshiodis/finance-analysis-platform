@@ -1,5 +1,5 @@
-from data.stock_pool import StockPool
-import visualization.visualization as visualization
+from finance_analysis.data.stock_pool import StockPool
+import finance_analysis.visualization.visualization as visualization
 
 
 def main():
