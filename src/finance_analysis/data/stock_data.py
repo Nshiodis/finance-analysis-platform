@@ -101,8 +101,7 @@ class StockData:
     
     def calculate_return(self):
         """计算收益率"""
-        self.df = indicators.calculate_return(self.df)
-        return self
+        return indicators.calculate_return(self.df)
 
     def calculate_total_return(self):
         """计算总收益率"""
@@ -110,11 +109,10 @@ class StockData:
     
     def calculate_ma(self, window: int = 20):
         """计算移动平均"""
-        self.df = indicators.calculate_ma(
+        return indicators.calculate_ma(
             self.df,
             window
         )
-        return self
 
     def calculate_rsi(
             self, 
@@ -122,17 +120,15 @@ class StockData:
             method: str = "wilder"
     ) -> pd.DataFrame:
         """计算RSI"""
-        self.df = indicators.calculate_rsi(
+        return indicators.calculate_rsi(
             self.df,
             window,
             method
         )
-        return self
 
     def calculate_macd(self):
         """计算MACD"""
-        self.df = indicators.calculate_macd(self.df)
-        return self
+        return indicators.calculate_macd(self.df)
 
     def calculate_volatility(self):
         """计算年化波动率"""

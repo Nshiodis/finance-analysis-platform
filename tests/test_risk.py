@@ -8,7 +8,8 @@ def main():
     pool = StockPool(
         [
             "600519.csv",
-            "300750.csv"
+            "300750.csv",
+            "000858.csv",
         ]
     )
 
@@ -33,8 +34,7 @@ def main():
 
     # 单股票回撤图
     stock: StockData = pool.stocks[0]
-    stock.to_datetime("date")
-    stock.set_index("date")
+    stock.to_datetime("date").set_index("date")
     visualization.plot_drawdown(stock)
 
 if __name__ == "__main__":

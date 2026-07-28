@@ -1,7 +1,9 @@
 import matplotlib.pyplot as plt
 from matplotlib.patches import Patch
+from matplotlib.ticker import PercentFormatter
 import finance_analysis.analysis.risk_analysis as risk_analysis
 import finance_analysis.utils.utils as utils
+import finance_analysis.analysis.portfolio as portfolio
 
 
 def plot_price_indicator(
@@ -246,7 +248,7 @@ def plot_risk_return(risk_df):
         plt.text(
             row["volatility"],
             row["total_return"],
-            row["stock"]
+            row["stock"].replace(".csv", "")
         )
 
     plt.xlabel("Volatility")
@@ -255,4 +257,57 @@ def plot_risk_return(risk_df):
     plt.grid()
     plt.tight_layout()
     utils.save_plot(plt.gcf(), "risk_return")
+    plt.show()
+
+
+def plot_portfolio_curve(portfolio):
+    """
+    绘制投资组合净值曲线
+    
+    参数:
+        portfolio: 投资组合对象
+    """
+    returns = portfolio.calculate_return()
+    nav = (1 + returns).cumprod()
+    plt.figure(figsize=(12,6))
+    
+    plt.plot(nav.index, nav.values)
+    plt.title("Portfolio Net Value Curve")
+    plt.xlabel("Date")
+    plt.ylabel("Net Asset Value")
+    plt.grid()
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    utils.save_plot(plt.gcf(), "portfolio_curve")
+    plt.show()
+
+
+def plot_portfolio_return_distribution(portfolio): 
+    """
+    绘制组合每日收益率分布
+    """
+
+    returns = (portfolio.calculate_return())
+
+    plt.figure(figsize=(12,6))
+    plt.hist(
+        returns,
+        bins=50
+    )
+    plt.title(
+        "Portfolio Daily Return Distribution"
+    )
+    plt.xlabel(
+        "Daily Return"
+    )
+    plt.ylabel(
+        "Frequency"
+    )
+    # 设置横轴为百分比显示
+    plt.gca().xaxis.set_major_formatter(
+        PercentFormatter(1)
+    )
+
+    plt.tight_layout()
+    utils.save_plot(plt.gcf(), "portfolio_return_distribution")
     plt.show()

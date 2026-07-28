@@ -33,19 +33,20 @@ def calculate_max_drawdown(df: pd.DataFrame) -> float:
 
 def calculate_sharpe_ratio(
     df: pd.DataFrame,
-    risk_free_rate: float = 0
+    risk_free_rate: float = 0.015
 ) -> float:
     """
     计算夏普比率
 
     参数：
         df: 股票数据 DataFrame
-        risk_free_rate: 无风险利率，默认值为0
+        risk_free_rate: 年化无风险利率，默认值为0.015
 
     返回：
         夏普比率
     """
-    excess_return = df["return"] - risk_free_rate
+    daily_rf = risk_free_rate / 252
+    excess_return = df["return"] - daily_rf
     annual_excess_return = excess_return.mean() * 252
 
     annual_volatility = df["return"].std() * (252 ** 0.5)

@@ -3,7 +3,7 @@ import pandas as pd
 def calculate_return(df: pd.DataFrame):
     """计算收益率"""
     df["return"] = df["close"].pct_change()
-    return df
+    return df["return"]
 
 def calculate_total_return(df):
     """计算总收益率"""
@@ -22,7 +22,7 @@ def calculate_ma(df: pd.DataFrame, window: int = 20):
         .rolling(window)
         .mean()
     )
-    return df
+    return df[f"MA{window}"]
 
 def calculate_rsi(
         df: pd.DataFrame,
@@ -65,7 +65,7 @@ def calculate_rsi(
 
     df["RSI"] = 100 - (100 / (1 + rs))
 
-    return df
+    return df["RSI"]
 
 def calculate_macd(df: pd.DataFrame):
     """计算MACD"""
@@ -88,4 +88,4 @@ def calculate_macd(df: pd.DataFrame):
     ).mean()
 
     df["MACD"] = df["DIF"] - df["DEA"]
-    return df
+    return df["MACD"], df["DIF"], df["DEA"]
