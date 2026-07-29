@@ -7,6 +7,8 @@ def calculate_return(df: pd.DataFrame):
 
 def calculate_total_return(df):
     """计算总收益率"""
+    calculate_return(df)
+    
     total_return =(
         (1 + df["return"])
         .cumprod()

@@ -47,15 +47,60 @@ def download_stock(
     print("下载完成")
 
 
-def main():
+def download_index(
+        symbol: str,
+        start_date: str,
+        end_date: str,
+        file_name: str,
+):
+    """
+    下载指数历史数据
 
-    download_stock(
-        symbol="sh600519",
-        start_date="20200101",
-        end_date="20251231",
-        file_name="600519.csv"
+    symbol:
+        指数代码，例如 sh000300
+
+    start_date:
+        开始日期
+
+    end_date:
+        结束日期
+
+    file_name:
+        保存文件名
+    """
+    project_path = Path(__file__).resolve().parents[3]
+
+    data_path = project_path / "data"
+
+    data_path.mkdir(exist_ok=True)
+
+    index = ak.stock_zh_index_daily_em(
+        symbol,
+        start_date=start_date,
+        end_date=end_date,
     )
 
+    if index.empty:
+        print("下载失败，没有数据")
+        return
+
+
+    index.to_csv(
+        data_path / file_name,
+        index=False,
+    )
+
+    print("下载完成") 
+
+
+def main():
+
+    download_index(
+        symbol="sh000300",
+        start_date="20200101",
+        end_date="20251231",
+        file_name="000300.csv"
+    )
 
 if __name__ == "__main__":
     main()

@@ -311,3 +311,24 @@ def plot_portfolio_return_distribution(portfolio):
     plt.tight_layout()
     utils.save_plot(plt.gcf(), "portfolio_return_distribution")
     plt.show()
+
+
+def plot_performance_curve(portfolio, benchmark):
+    """
+    绘制组合和基准的净值曲线
+    """
+
+    portfolio_nav = (1 + portfolio.calculate_return()).cumprod()
+    benchmark_nav = (1 + benchmark.calculate_return()).cumprod()
+    plt.figure(figsize=(12,6))
+    plt.plot(portfolio_nav.index, portfolio_nav.values, label="Portfolio")
+    plt.plot(benchmark_nav.index, benchmark_nav.values, label="Benchmark")
+    plt.title("Portfolio vs Benchmark")
+    plt.xlabel("Date")
+    plt.ylabel("Net Asset Value")
+    plt.grid()
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    plt.legend()
+    utils.save_plot(plt.gcf(), "performance_curve")
+    plt.show()
