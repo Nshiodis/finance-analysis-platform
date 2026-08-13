@@ -17,6 +17,10 @@ def get_output_path() -> Path:
     output_path.mkdir(exist_ok=True)
     return output_path
 
+def get_database_path() -> Path:
+    """获取数据库目录"""
+    return get_project_path() / "database"
+
 def load_csv(
     file_name: str, 
     folder: str = "output",
