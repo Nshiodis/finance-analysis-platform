@@ -19,7 +19,7 @@ def get_output_path() -> Path:
 
 def get_database_path() -> Path:
     """获取数据库目录"""
-    return get_project_path() / "database"
+    return get_project_path() / "database" / "finance.db"
 
 def load_csv(
     file_name: str, 

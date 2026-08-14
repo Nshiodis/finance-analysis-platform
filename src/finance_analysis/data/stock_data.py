@@ -1,6 +1,8 @@
 import pandas as pd
 import finance_analysis.analysis.indicators as indicators
 import finance_analysis.analysis.risk_analysis as risk_analysis
+from finance_analysis.database.database_manager import DatabaseManager
+from finance_analysis.repository.stock_repository import StockRepository
 import finance_analysis.utils.utils as utils
 import matplotlib.pyplot as plt
 
@@ -9,8 +11,47 @@ class StockData:
 
     def __init__(self, file_name: str, folder: str = "data"):
         self.file_name = file_name
+        self.symbol = None
+
         self.df = utils.load_csv(file_name, folder)
         self.raw_columns = self.df.columns.tolist()
+
+
+    @classmethod
+    def from_dataframe(cls, df):
+        stock = cls.__new__(cls)
+
+        stock.file_name = None
+        stock.df = df
+        stock.raw_columns = df.columns.tolist()
+
+        if "symbol" in df.columns:
+            stock.symbol = df["symbol"].iloc[0]
+        else:
+            stock.symbol = None
+
+        return stock
+
+    
+    @classmethod
+    def from_database(
+            cls,
+            symbol: str
+    ):
+
+        repo = StockRepository(
+            utils.get_database_path()
+        )
+
+        df = repo.get_stock(symbol)
+
+        if df.empty:
+            raise ValueError(
+                f"股票 {symbol} 不存在"
+            )        
+
+        return cls.from_dataframe(df)
+    
 # =============================================================================
 # 数据基本信息
 # =============================================================================

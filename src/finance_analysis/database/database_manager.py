@@ -182,6 +182,7 @@ class DatabaseManager:
         SELECT *
         FROM {table_name}
         WHERE symbol = ?
+        ORDER BY date
         """
 
 

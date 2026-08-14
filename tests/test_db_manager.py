@@ -6,7 +6,7 @@ from finance_analysis.database.database_manager import DatabaseManager
 # 创建数据库对象
 
 db = DatabaseManager(
-    get_database_path() / "finance.db"
+    get_database_path()
 )
 
 # 模拟股票数据

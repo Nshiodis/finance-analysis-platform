@@ -5,6 +5,7 @@ class StockPool:
     """股票池"""
 
     def __init__(self, files, folder="data"):
+
         self.stocks: list[StockData] = []
 
         for file in files:
@@ -15,6 +16,40 @@ class StockPool:
             self.stocks.append(stock)
 
 
+    @classmethod
+    def from_stocks(
+            cls,
+            stocks: list[StockData]
+    ):
+        """根据 StockData 对象列表创建股票池"""
+
+        pool = cls.__new__(cls)
+
+        pool.stocks = stocks
+
+        return pool   
+
+
+    @classmethod
+    def from_database(
+            cls,
+            symbols: list[str]
+    ):
+        """从数据库创建股票池"""
+
+        stocks = []
+
+        for symbol in symbols:
+
+            stock = StockData.from_database(
+                symbol
+            )
+
+            stocks.append(stock)
+
+        return cls.from_stocks(stocks)
+
+    
     def set_index(self, index_col="date") -> None:
         """设置股票池的索引"""
         for stock in self.stocks:
@@ -57,7 +92,7 @@ class StockPool:
                 stock.calculate_return()
 
             risk_info = {
-                "stock": stock.file_name,
+                "stock": stock.file_name or stock.symbol,
                 "total_return": stock.calculate_total_return(),
                 "volatility": stock.calculate_volatility(),
                 "max_drawdown": stock.calculate_max_drawdown(),
