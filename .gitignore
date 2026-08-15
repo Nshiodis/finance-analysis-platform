@@ -27,3 +27,9 @@ Thumbs.db
 
 # Logs
 *.log
+
+# SQLite database (rebuilt from data/ CSVs via DatabaseLoader)
+database/*.db*
+
+# Generated outputs (plots, intermediate results)
+output/
