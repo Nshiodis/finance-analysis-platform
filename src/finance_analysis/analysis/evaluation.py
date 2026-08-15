@@ -1,5 +1,5 @@
 from finance_analysis.analysis.benchmark import Benchmark
-from finance_analysis.analysis.portfolio import Portfolio
+from finance_analysis.models.portfolio import Portfolio
 
 
 class PerformanceEvaluator:

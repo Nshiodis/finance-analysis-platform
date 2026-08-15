@@ -1,5 +1,5 @@
-from finance_analysis.data.stock_data import StockData
-from finance_analysis.analysis.portfolio import Portfolio
+from finance_analysis.models.stock import StockData
+from finance_analysis.models.portfolio import Portfolio
 import finance_analysis.visualization.visualization as visualization
 
 def main():

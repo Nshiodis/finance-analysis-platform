@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
-from finance_analysis.analysis.risk_analysis import calculate_sharpe_ratio
-from finance_analysis.data.stock_data import StockData
+from finance_analysis.analysis.risk import calculate_sharpe_ratio
+from finance_analysis.models.stock import StockData
 
 class Portfolio:
     """

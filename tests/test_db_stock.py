@@ -1,5 +1,5 @@
-from finance_analysis.data.stock_data import StockData
-from finance_analysis.data.stock_pool import StockPool
+from finance_analysis.models.stock import StockData
+from finance_analysis.models.pool import StockPool
 
 
 # stock = StockData.from_database("600519")

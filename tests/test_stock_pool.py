@@ -1,4 +1,4 @@
-from finance_analysis.data.stock_pool import StockPool
+from finance_analysis.models.pool import StockPool
 import finance_analysis.visualization.visualization as visualization
 
 

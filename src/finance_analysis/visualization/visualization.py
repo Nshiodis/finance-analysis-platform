@@ -1,9 +1,9 @@
 import matplotlib.pyplot as plt
 from matplotlib.patches import Patch
 from matplotlib.ticker import PercentFormatter
-import finance_analysis.analysis.risk_analysis as risk_analysis
+import finance_analysis.analysis.risk as risk
 import finance_analysis.utils.utils as utils
-import finance_analysis.analysis.portfolio as portfolio
+import finance_analysis.models.portfolio as portfolio
 
 
 def plot_price_indicator(
@@ -222,7 +222,7 @@ def plot_compare(stock_pool):
 
 def plot_drawdown(stock):
     """回撤曲线"""
-    drawdown = risk_analysis.calculate_drawdown(stock.df)
+    drawdown = risk.calculate_drawdown(stock.df)
     max_drawdown = drawdown.min()
 
     plt.figure(figsize=(12, 6))

@@ -1,7 +1,6 @@
 import pandas as pd
 import finance_analysis.analysis.indicators as indicators
-import finance_analysis.analysis.risk_analysis as risk_analysis
-from finance_analysis.database.database_manager import DatabaseManager
+import finance_analysis.analysis.risk as risk
 from finance_analysis.repository.stock_repository import StockRepository
 import finance_analysis.utils.utils as utils
 import matplotlib.pyplot as plt
@@ -177,18 +176,18 @@ class StockData:
 
     def calculate_volatility(self):
         """计算年化波动率"""
-        return risk_analysis.calculate_volatility(
+        return risk.calculate_volatility(
             self.df
         )
 
     def calculate_max_drawdown(self):
         """计算最大回撤"""
-        return risk_analysis.calculate_max_drawdown(
+        return risk.calculate_max_drawdown(
             self.df
         )
 
     def calculate_sharpe_ratio(self):
         """计算夏普比率"""
-        return risk_analysis.calculate_sharpe_ratio(
+        return risk.calculate_sharpe_ratio(
             self.df
         )

@@ -1,6 +1,6 @@
 import pandas as pd
 from finance_analysis.utils.utils import get_database_path
-from finance_analysis.database.database_manager import DatabaseManager
+from finance_analysis.database.manager import DatabaseManager
 
 
 # 创建数据库对象

@@ -1,5 +1,5 @@
-from finance_analysis.data.stock_pool  import StockPool
-from finance_analysis.data.stock_data import StockData
+from finance_analysis.models.pool import StockPool
+from finance_analysis.models.stock import StockData
 import finance_analysis.visualization.visualization as visualization
 import pandas as pd
 
