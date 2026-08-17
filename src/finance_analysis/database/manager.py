@@ -1,5 +1,8 @@
 import sqlite3
 import pandas as pd
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class DatabaseManager:
@@ -10,7 +13,11 @@ class DatabaseManager:
 
     def connect(self):
         """创建数据库连接"""
-        return sqlite3.connect(self.db_path)
+        try:
+            return sqlite3.connect(self.db_path)
+        except sqlite3.Error as exc:
+            logger.error("连接数据库失败：%s", exc)
+            raise
 
     def create_table_from_dataframe(
         self,

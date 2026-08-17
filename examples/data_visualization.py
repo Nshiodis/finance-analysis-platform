@@ -1,6 +1,7 @@
 import pandas as pd
 import finance_analysis.utils.utils as utils
 import matplotlib.pyplot as plt
+from finance_analysis.config import OUTPUT_PATH
 
 def main():
     # =========================
@@ -179,7 +180,7 @@ def main():
     plt.close()
 
     print("\n========== 可视化完成 ==========")
-    print(f"图片已保存到：{utils.get_output_path()}")
+    print(f"图片已保存到：{OUTPUT_PATH }")
 
 
 if __name__ == "__main__":

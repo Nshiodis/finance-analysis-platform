@@ -1,8 +1,8 @@
 from finance_analysis.database.manager import DatabaseManager
-from finance_analysis.utils.utils import get_database_path
+from finance_analysis.config import DATABASE_PATH
 
 db = DatabaseManager(
-    get_database_path()
+    DATABASE_PATH
 )
 
 df =db.query_stock(

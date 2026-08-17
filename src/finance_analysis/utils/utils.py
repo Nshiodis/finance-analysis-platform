@@ -1,25 +1,11 @@
-from pathlib import Path
-import matplotlib.pyplot as plt
-from matplotlib.figure import Figure
 import pandas as pd
+from matplotlib.figure import Figure
 
-def get_project_path() -> Path:
-    """获取项目根目录"""
-    return Path(__file__).resolve().parents[3]
+import logging
+from finance_analysis.config import PROJECT_ROOT, OUTPUT_PATH
 
-def get_data_path() -> Path:
-    """获取数据目录"""
-    return get_project_path() / "data"
+logger = logging.getLogger(__name__)
 
-def get_output_path() -> Path:
-    """获取输出目录"""
-    output_path = get_project_path() / "output"
-    output_path.mkdir(exist_ok=True)
-    return output_path
-
-def get_database_path() -> Path:
-    """获取数据库目录"""
-    return get_project_path() / "database" / "finance.db"
 
 def load_csv(
     file_name: str, 
@@ -32,7 +18,7 @@ def load_csv(
     :param folder: 文件所在目录(默认output)
     :return: pandas DataFrame
     """
-    file_path = get_project_path() / folder / file_name
+    file_path = PROJECT_ROOT / folder / file_name
 
     if not file_path.exists():
         raise FileNotFoundError(f"找不到文件：{file_path}")
@@ -50,12 +36,12 @@ def save_csv(
     :param file_name: 文件名
     :param index: 是否包含索引(默认True)
     """
-    output_path = get_output_path()
+    output_path = OUTPUT_PATH
     df.to_csv(
         output_path / file_name,
         index=index,
     )
-    print(f"{file_name} 已保存至: {output_path / file_name}")
+    logger.info("%s 已保存至: %s", file_name, output_path / file_name)
 
 def save_plot(
     fig: Figure, 
@@ -67,10 +53,10 @@ def save_plot(
     :param fig: matplotlib Figure
     :param file_name: 文件名
     """
-    output_path = get_output_path()
+    output_path = OUTPUT_PATH
     fig.savefig(
         output_path / file_name,
         dpi=300,
         bbox_inches="tight",
     )
-    print(f"已保存文件: {output_path / file_name}")
+    logger.info("已保存文件: %s", output_path / file_name)

@@ -4,6 +4,10 @@ import finance_analysis.analysis.risk as risk
 from finance_analysis.repository.stock_repository import StockRepository
 import finance_analysis.utils.utils as utils
 import matplotlib.pyplot as plt
+import logging
+from finance_analysis.config import DATABASE_PATH
+
+logger = logging.getLogger(__name__)
 
 class StockData:
     """股票数据对象"""
@@ -39,7 +43,7 @@ class StockData:
     ):
 
         repo = StockRepository(
-            utils.get_database_path()
+            DATABASE_PATH
         )
 
         df = repo.get_stock(symbol)
@@ -135,10 +139,10 @@ class StockData:
 # =============================================================================
     def indicators_info(self):
         """查看新增指标列名"""
-        print("新增指标列名:")
-        print(
+        logger.info(
+            "新增指标列名: %s",
             [
-                col for col in self.df.columns
+                col for col in self.df.columns 
                 if col not in self.raw_columns
             ]
         )
