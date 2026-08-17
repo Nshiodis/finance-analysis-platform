@@ -3,7 +3,7 @@
 ## 项目简介
 
 金融数据分析学习平台（暑期导师式每日任务）。当前完成到 **Day24：响应模型与查询参数**（Pydantic 响应模型 + 日期区间筛选）。
-下一步 **Day25：待定**。
+下一步 **Day25：Service 层与业务逻辑分离**（完整路线见文末"学习路线规划"）。
 
 ## 技术栈
 
@@ -59,3 +59,34 @@ src/finance_analysis/
 - 查询参数：`GET /stock/{symbol}?start=&end=` 日期区间筛选，参数穿透 API → StockData → StockRepository → DatabaseManager（SQL 动态拼接，`start/end` 转 `isoformat()` 绑定）
 - 业务异常：`exceptions.py` 的 `StockNotFoundError` / `StockNoDataError`（继承 ValueError）区分两种 404 语义
 - 接口测试：`tests/test_api.py`（pytest + TestClient，fixture + parametrize，覆盖正常 / 区间 / 空区间 / 非法日期 / 不存在共 5 个场景）
+
+## 学习路线规划（Day25–Day35）
+
+> 阶段定位：Day1–19 是"我会什么"，Day20–24 是"我怎么把它组织起来"，Day25–35 是"把它做成别人能调用、测试、部署的软件"。
+> 原则：**不回头堆金融指标，不做前端**；每个接口/每层改动当天补 pytest + git 提交 + Obsidian 笔记。
+
+主线骨架（所有接口都长这样）：
+
+```
+Router → Service → Repository → Database
+```
+
+### 逐日安排
+
+- **Day25 Service 层与业务逻辑分离**：新增 `services/`（如 `StockService`），把编排逻辑从 `app.py` 挪进 Service；`app.py` 只做"收请求、转参数、回 Response Model"。验收：`GET /stock/600519` 行为不变，配套单测通过。
+- **Day26 统一异常与统一响应**：扩展 `exceptions.py`（`InvalidDateRangeError` / `DatabaseError` 等），用 FastAPI 异常处理器统一转 JSON（`code` + `message`），去掉接口里散落的 try/except。验收：所有错误响应的结构统一。
+- **Day27 RESTful API 设计**：学 REST 资源语义；用 `APIRouter` 按资源拆分路由；v1.0 前统一资源命名为复数 `/stocks/{symbol}`（旧路径可先保留兼容）；补 `GET /stocks` 列表。验收：`/docs` 结构清晰、无重复代码。
+- **Day28 金融分析 API**：把 Day17–19 能力暴露成接口：`GET /stocks/{symbol}/risk`（收益/波动/回撤/Sharpe）、`/indicators?window=20`（MA/RSI/MACD）。验收：每个新接口都有 pytest 覆盖。
+- **Day29 Portfolio API（含持久化）**：新增 portfolio 表 + `PortfolioRepository` + `PortfolioService`；`POST /portfolios`（请求体 = 权重 dict）、`GET /portfolios/{id}/performance`（组合收益/年化/波动/Sharpe/Benchmark/Excess Return）。验收：组合可入库、可查绩效，接口测试全绿。
+- **Day30 测试体系系统化**：测试金字塔——单元（Service，mock Repository）→ 集成（Repository 用临时数据库）→ API（TestClient）；fixture / monkeypatch / mock；引入覆盖率统计。验收：核心层覆盖率 ≥ 70%。
+- **Day31 日志与可观测性**：请求日志中间件（method / path / status / 耗时）；分层日志（INFO 查询参数、WARNING 未命中、ERROR 数据库失败）；不记录敏感信息。验收：一条请求在日志里可完整追踪。
+- **Day32 配置与环境管理**：引入 pydantic-settings + `.env`；按 development / testing / production 区分配置；测试用独立临时数据库。验收：改环境变量即可切换环境，代码里无硬编码路径。
+- **Day33 Docker 化**：Dockerfile（多阶段构建）+ docker-compose。目标：`docker compose up` → `/docs` 可访问。验收：新环境一条命令启动。
+- **Day34 项目文档**：README.md（项目是什么 / 如何运行 / 如何测试）+ ARCHITECTURE.md（分层与数据流图）+ API.md（接口清单与示例）。验收：照着文档能在新环境跑起来。
+- **Day35 工程 Review 与 v1.0**：代码走查（重复 / 命名 / 注解 / 异常 / 日志 / 测试 / 配置 / 文档）→ 全量 pytest → 打 tag `v1.0.0`。验收：checklist 全过、Git clean。
+
+### 贯穿原则
+
+- 每日一课：先讲清楚再做；核心代码由用户自己写、贴回来核对
+- 每天结束时三件套：pytest 全绿 + git commit + Obsidian 笔记（日志 + 主题）
+- 一切为"可调用、可测试、可部署"服务
