@@ -1,3 +1,5 @@
+from datetime import date
+
 from finance_analysis.database.manager import DatabaseManager
 
 
@@ -13,10 +15,12 @@ class StockRepository:
 
     def get_stock(
             self,
-            symbol: str
+            symbol: str,
+            start: date | None = None,
+            end: date | None = None,
     ):
         """
         根据股票代码获取股票数据
         """
 
-        return self.db.query_stock(symbol)
+        return self.db.query_stock(symbol, start, end)
