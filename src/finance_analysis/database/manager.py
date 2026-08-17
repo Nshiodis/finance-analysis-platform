@@ -1,3 +1,4 @@
+from datetime import date
 import sqlite3
 import pandas as pd
 import logging
@@ -164,18 +165,12 @@ class DatabaseManager:
     def query_stock(
         self,
         symbol,
+        start=None,
+        end=None,
         table_name="stock_price"
 ):
         """
         根据股票代码查询股票数据
-
-        Parameters
-        ----------
-        symbol:
-            股票代码
-
-        table_name:
-            数据表名
 
         Returns
         -------
@@ -183,25 +178,26 @@ class DatabaseManager:
         """
 
         conn = self.connect()
+        sql = f"SELECT * FROM {table_name} WHERE symbol = ?" 
+        params = [symbol]
 
+        if start is not None:
+            sql += " AND date >= ?"
+            params.append(start.isoformat())
 
-        sql = f"""
-        SELECT *
-        FROM {table_name}
-        WHERE symbol = ?
-        ORDER BY date
-        """
+        if end is not None:
+            sql += " AND date <= ?"
+            params.append(end.isoformat())
 
-
+        sql += " ORDER BY date"
+        
         df = pd.read_sql(
             sql,
             conn,
-            params=(symbol,)
+            params=params
         )
 
-
         conn.close()
-
 
         return df
     

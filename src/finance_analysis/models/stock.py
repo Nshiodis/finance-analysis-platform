@@ -1,6 +1,9 @@
+from datetime import date
+
 import pandas as pd
 import finance_analysis.analysis.indicators as indicators
 import finance_analysis.analysis.risk as risk
+from finance_analysis.exceptions import StockNoDataError, StockNotFoundError
 from finance_analysis.repository.stock_repository import StockRepository
 import finance_analysis.utils.utils as utils
 import matplotlib.pyplot as plt
@@ -39,19 +42,31 @@ class StockData:
     @classmethod
     def from_database(
             cls,
-            symbol: str
+            symbol: str,
+            start: date | None = None,
+            end: date | None = None,
     ):
 
         repo = StockRepository(
             DATABASE_PATH
         )
 
-        df = repo.get_stock(symbol)
+        df = repo.get_stock(symbol, start, end)
 
         if df.empty:
-            raise ValueError(
-                f"股票 {symbol} 不存在"
-            )        
+            if start is None and end is None:
+                raise StockNotFoundError(
+                    f"股票 {symbol} 不存在"
+                )
+
+            full_df = repo.get_stock(symbol)
+            if full_df.empty:
+                raise StockNotFoundError(
+                    f"股票 {symbol} 不存在"
+                )
+            raise StockNoDataError(
+                f"股票 {symbol} 在指定日期范围内没有数据"
+            )                 
 
         return cls.from_dataframe(df)
     
