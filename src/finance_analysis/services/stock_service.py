@@ -1,7 +1,7 @@
 from datetime import date
 
 from finance_analysis.config import DATABASE_PATH
-from finance_analysis.exceptions import StockNotFoundError, StockNoDataError
+from finance_analysis.exceptions import StockNotFoundError, StockNoDataError, InvalidDateRangeError
 from finance_analysis.models.stock import StockData
 from finance_analysis.repository.stock_repository import StockRepository
 
@@ -20,6 +20,9 @@ class StockService:
         end: date | None = None,
     ) -> dict:
         """获取股票数据"""
+        if start is not None and end is not None and start > end:
+            raise InvalidDateRangeError("开始日期不能晚于结束日期")
+        
         df = self.repository.get_stock(symbol, start, end)
 
         if df.empty:

@@ -28,16 +28,19 @@ def test_stock_with_date_range(client):
 
 
 @pytest.mark.parametrize(
-    "path, params, expected_status, expected_detail",
+    "path, params, expected_status, expected_code, expected_messages",
     [
-        ("/stock/600519", {"start": "2000-01-01", "end": "2000-12-31"}, 404, "没有数据"),
-        ("/stock/600519", {"start": "abc"}, 422, None),
-        ("/stock/999999", None, 404, "不存在"),
+        ("/stock/600519", {"start": "2000-01-01", "end": "2000-12-31"}, 404, "STOCK_NO_DATA", "没有数据"),
+        ("/stock/600519", {"start": "abc"}, 422, "VALIDATION_ERROR", None),
+        ("/stock/999999", None, 404, "STOCK_NOT_FOUND", "不存在"),
+        ("/stock/600519", {"start": "2022-01-02", "end": "2022-01-01"}, 422, "INVALID_DATE_RANGE", "不能晚于")
     ],
 )
-def test_stock_error_cases(client, path, params, expected_status, expected_detail):
-    """三个错误场景共用一套断言"""
+def test_stock_error_cases(client, path, params, expected_status, expected_code, expected_messages):
+    """四个错误场景共用一套断言"""
     r = client.get(path, params=params)
     assert r.status_code == expected_status
-    if expected_detail is not None:
-        assert expected_detail in r.json()["detail"]
+    data = r.json()
+    assert data["code"] == expected_code
+    if expected_messages is not None:
+        assert expected_messages in data["message"]

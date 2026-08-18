@@ -1,6 +1,8 @@
 from datetime import date
+import sqlite3
 
 from finance_analysis.database.manager import DatabaseManager
+from finance_analysis.exceptions import DatabaseError
 
 
 class StockRepository:
@@ -22,5 +24,8 @@ class StockRepository:
         """
         根据股票代码获取股票数据
         """
-
-        return self.db.query_stock(symbol, start, end)
+        try:
+            return self.db.query_stock(symbol, start, end)
+        except sqlite3.Error as exc:
+            raise DatabaseError("数据库查询失败") from exc
+        

@@ -1,7 +1,9 @@
 from datetime import date
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
 
-from finance_analysis.exceptions import StockNoDataError, StockNotFoundError
+from finance_analysis.exceptions import AppError
 from finance_analysis.utils.logger import setup_logging
 from finance_analysis.api.schemas import StockResponse
 from finance_analysis.services.stock_service import StockService
@@ -13,12 +15,22 @@ app = FastAPI()
 
 service = StockService()
 
+@app.exception_handler(AppError)
+async def handle_app_error(request, exc: AppError):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"code": exc.code, "message": str(exc)}
+    )
+
+@app.exception_handler(RequestValidationError)
+async def handle_request_validation_error(request, exc):
+    return JSONResponse(
+        status_code=422,
+        content={"code": "VALIDATION_ERROR", "message": exc.errors()[0]["msg"]}
+    )
+
+
 @app.get("/stock/{symbol}", response_model=StockResponse)
 def get_stock(symbol: str, start: date | None = None, end: date | None = None):
     """获取股票数据"""
-    try:
-        return service.get_stock_metrics(symbol, start, end)
-    except StockNotFoundError:
-        raise HTTPException(status_code=404, detail=f"股票{symbol}不存在")
-    except StockNoDataError:
-        raise HTTPException(status_code=404, detail=f"股票{symbol}在指定日期范围内没有数据")
+    return service.get_stock_metrics(symbol, start, end)

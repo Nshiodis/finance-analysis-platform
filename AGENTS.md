@@ -2,8 +2,8 @@
 
 ## 项目简介
 
-金融数据分析学习平台（暑期导师式每日任务）。当前完成到 **Day25：Service 层与业务逻辑分离**（业务编排下沉到 Service，路由只做转译）。
-下一步 **Day26：统一异常与统一响应**（完整路线见文末"学习路线规划"）。
+金融数据分析学习平台（暑期导师式每日任务）。当前完成到 **Day26：统一异常与统一响应**（所有错误响应统一为 `code` + `message`）。
+下一步 **Day27：RESTful API 设计**（完整路线见文末"学习路线规划"）。
 
 ## 技术栈
 
@@ -18,8 +18,8 @@
 ```
 src/finance_analysis/
 ├── config.py           # 集中配置：PROJECT_ROOT / DATA_PATH / OUTPUT_PATH / DATABASE_PATH / LOG_PATH / LOG_LEVEL
-├── exceptions.py       # 业务异常（StockNotFoundError / StockNoDataError）
-├── api/                # FastAPI 应用（app.py：GET /stock/{symbol}，schemas.py：StockResponse 响应模型）
+├── exceptions.py       # 异常体系（AppError 基类 + 4 个子类，携带 status_code / code）
+├── api/                # FastAPI 应用（app.py：GET /stock/{symbol} + 统一异常处理器，schemas.py：StockResponse 响应模型）
 ├── services/           # StockService（业务编排：取数 → 异常判断 → 算指标 → 组结果）
 ├── models/             # StockData / StockPool / Portfolio（业务对象）
 ├── repository/         # StockRepository（数据访问层，业务层不直接碰 SQLite）
@@ -45,6 +45,8 @@ src/finance_analysis/
   - 提交：`feat: add response model and date range query for stock API`
 - Day25（已完成）：Service 层与业务逻辑分离（新增 `services/stock_service.py`：`StockService.get_stock_metrics` 承接取数/空判断/算指标/组 dict 的编排；`app.py` 瘦身为"收请求、转参数、调 Service、回 Response Model"；异常语义与接口行为不变）
   - 提交：`refactor: extract service layer for stock business logic`
+- Day26（已完成）：统一异常与统一响应（`AppError` 基类携带 `status_code`/`code`；`InvalidDateRangeError` 在 Service 校验 `start > end`；`DatabaseError` 在 Repository 包装 `sqlite3.Error`；`app.py` 注册 `AppError` / `RequestValidationError` 处理器并删光 try/except；错误响应统一为 `{"code", "message"}`）
+  - 提交：`feat: unify error handling with code/message responses`
 
 ## 约定与注意事项
 
@@ -70,6 +72,14 @@ src/finance_analysis/
 - 路由瘦身：`app.py` 只做"收请求、转参数、调 Service、回 Response Model"；`try/except` 暂留路由层（Day26 统一异常时收编）
 - 验收：`GET /stock/600519` 行为不变，5 个 pytest 接口测试全绿
 
+## Day26（已完成）
+
+- 异常体系：`exceptions.py` 新增 `AppError(ValueError)` 基类（类属性 `status_code` / `code`），四个子类：`StockNotFoundError`(404/STOCK_NOT_FOUND)、`StockNoDataError`(404/STOCK_NO_DATA)、`InvalidDateRangeError`(422/INVALID_DATE_RANGE)、`DatabaseError`(500/DATABASE_ERROR)
+- 业务校验：`StockService.get_stock_metrics` 开头校验 `start > end` 抛 `InvalidDateRangeError`（fail fast）
+- 数据层包装：`StockRepository.get_stock` 捕获 `sqlite3.Error` → `raise DatabaseError(...) from exc`（异常链保留根因，message 不暴露内部细节）
+- 统一响应：`app.py` 注册 `@app.exception_handler(AppError)` 与 `RequestValidationError` 处理器，路由删光 try/except；所有错误返回 `{"code": ..., "message": ...}`
+- 测试：`test_api.py` 断言改为 `code` 全等 + `message` 子串，新增倒挂区间用例，6 个用例全绿
+
 ## 学习路线规划（Day25–Day35）
 
 > 阶段定位：Day1–19 是"我会什么"，Day20–24 是"我怎么把它组织起来"，Day25–35 是"把它做成别人能调用、测试、部署的软件"。
@@ -84,7 +94,7 @@ Router → Service → Repository → Database
 ### 逐日安排
 
 - **Day25 Service 层与业务逻辑分离**（已完成）：新增 `services/`（如 `StockService`），把编排逻辑从 `app.py` 挪进 Service；`app.py` 只做"收请求、转参数、回 Response Model"。验收：`GET /stock/600519` 行为不变，配套单测通过。
-- **Day26 统一异常与统一响应**：扩展 `exceptions.py`（`InvalidDateRangeError` / `DatabaseError` 等），用 FastAPI 异常处理器统一转 JSON（`code` + `message`），去掉接口里散落的 try/except。验收：所有错误响应的结构统一。
+- **Day26 统一异常与统一响应**（已完成）：扩展 `exceptions.py`（`InvalidDateRangeError` / `DatabaseError` 等），用 FastAPI 异常处理器统一转 JSON（`code` + `message`），去掉接口里散落的 try/except。验收：所有错误响应的结构统一。
 - **Day27 RESTful API 设计**：学 REST 资源语义；用 `APIRouter` 按资源拆分路由；v1.0 前统一资源命名为复数 `/stocks/{symbol}`（旧路径可先保留兼容）；补 `GET /stocks` 列表。验收：`/docs` 结构清晰、无重复代码。
 - **Day28 金融分析 API**：把 Day17–19 能力暴露成接口：`GET /stocks/{symbol}/risk`（收益/波动/回撤/Sharpe）、`/indicators?window=20`（MA/RSI/MACD）。验收：每个新接口都有 pytest 覆盖。
 - **Day29 Portfolio API（含持久化）**：新增 portfolio 表 + `PortfolioRepository` + `PortfolioService`；`POST /portfolios`（请求体 = 权重 dict）、`GET /portfolios/{id}/performance`（组合收益/年化/波动/Sharpe/Benchmark/Excess Return）。验收：组合可入库、可查绩效，接口测试全绿。
