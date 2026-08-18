@@ -2,8 +2,8 @@
 
 ## 项目简介
 
-金融数据分析学习平台（暑期导师式每日任务）。当前完成到 **Day24：响应模型与查询参数**（Pydantic 响应模型 + 日期区间筛选）。
-下一步 **Day25：Service 层与业务逻辑分离**（完整路线见文末"学习路线规划"）。
+金融数据分析学习平台（暑期导师式每日任务）。当前完成到 **Day25：Service 层与业务逻辑分离**（业务编排下沉到 Service，路由只做转译）。
+下一步 **Day26：统一异常与统一响应**（完整路线见文末"学习路线规划"）。
 
 ## 技术栈
 
@@ -20,6 +20,7 @@ src/finance_analysis/
 ├── config.py           # 集中配置：PROJECT_ROOT / DATA_PATH / OUTPUT_PATH / DATABASE_PATH / LOG_PATH / LOG_LEVEL
 ├── exceptions.py       # 业务异常（StockNotFoundError / StockNoDataError）
 ├── api/                # FastAPI 应用（app.py：GET /stock/{symbol}，schemas.py：StockResponse 响应模型）
+├── services/           # StockService（业务编排：取数 → 异常判断 → 算指标 → 组结果）
 ├── models/             # StockData / StockPool / Portfolio（业务对象）
 ├── repository/         # StockRepository（数据访问层，业务层不直接碰 SQLite）
 ├── database/           # manager.py（DatabaseManager）/ loader.py（DatabaseLoader）
@@ -42,6 +43,8 @@ src/finance_analysis/
   - 提交：`feat: add FastAPI service with stock metrics endpoint`
 - Day24（已完成）：响应模型与查询参数（`api/schemas.py` 定义 `StockResponse`；`?start=&end=` 日期区间筛选穿透到 SQL 层；`exceptions.py` 区分"股票不存在"与"区间无数据"；`tests/test_api.py` 改为 pytest 接口测试）
   - 提交：`feat: add response model and date range query for stock API`
+- Day25（已完成）：Service 层与业务逻辑分离（新增 `services/stock_service.py`：`StockService.get_stock_metrics` 承接取数/空判断/算指标/组 dict 的编排；`app.py` 瘦身为"收请求、转参数、调 Service、回 Response Model"；异常语义与接口行为不变）
+  - 提交：`refactor: extract service layer for stock business logic`
 
 ## 约定与注意事项
 
@@ -60,6 +63,13 @@ src/finance_analysis/
 - 业务异常：`exceptions.py` 的 `StockNotFoundError` / `StockNoDataError`（继承 ValueError）区分两种 404 语义
 - 接口测试：`tests/test_api.py`（pytest + TestClient，fixture + parametrize，覆盖正常 / 区间 / 空区间 / 非法日期 / 不存在共 5 个场景）
 
+## Day25（已完成）
+
+- Service 层：新增 `services/stock_service.py`，`StockService` 构造时持有 `StockRepository(db_path=DATABASE_PATH)`（依赖显式化）
+- 方法 `get_stock_metrics(symbol, start, end) -> dict`：取数 → 空判断（先查区间、空再查全量，区分 `StockNotFoundError` / `StockNoDataError`）→ `calculate_return()` → 组装与 `StockResponse` 字段一致的 dict
+- 路由瘦身：`app.py` 只做"收请求、转参数、调 Service、回 Response Model"；`try/except` 暂留路由层（Day26 统一异常时收编）
+- 验收：`GET /stock/600519` 行为不变，5 个 pytest 接口测试全绿
+
 ## 学习路线规划（Day25–Day35）
 
 > 阶段定位：Day1–19 是"我会什么"，Day20–24 是"我怎么把它组织起来"，Day25–35 是"把它做成别人能调用、测试、部署的软件"。
@@ -73,7 +83,7 @@ Router → Service → Repository → Database
 
 ### 逐日安排
 
-- **Day25 Service 层与业务逻辑分离**：新增 `services/`（如 `StockService`），把编排逻辑从 `app.py` 挪进 Service；`app.py` 只做"收请求、转参数、回 Response Model"。验收：`GET /stock/600519` 行为不变，配套单测通过。
+- **Day25 Service 层与业务逻辑分离**（已完成）：新增 `services/`（如 `StockService`），把编排逻辑从 `app.py` 挪进 Service；`app.py` 只做"收请求、转参数、回 Response Model"。验收：`GET /stock/600519` 行为不变，配套单测通过。
 - **Day26 统一异常与统一响应**：扩展 `exceptions.py`（`InvalidDateRangeError` / `DatabaseError` 等），用 FastAPI 异常处理器统一转 JSON（`code` + `message`），去掉接口里散落的 try/except。验收：所有错误响应的结构统一。
 - **Day27 RESTful API 设计**：学 REST 资源语义；用 `APIRouter` 按资源拆分路由；v1.0 前统一资源命名为复数 `/stocks/{symbol}`（旧路径可先保留兼容）；补 `GET /stocks` 列表。验收：`/docs` 结构清晰、无重复代码。
 - **Day28 金融分析 API**：把 Day17–19 能力暴露成接口：`GET /stocks/{symbol}/risk`（收益/波动/回撤/Sharpe）、`/indicators?window=20`（MA/RSI/MACD）。验收：每个新接口都有 pytest 覆盖。
