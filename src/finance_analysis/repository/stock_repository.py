@@ -28,4 +28,13 @@ class StockRepository:
             return self.db.query_stock(symbol, start, end)
         except sqlite3.Error as exc:
             raise DatabaseError("数据库查询失败") from exc
-        
+
+
+    def get_all_symbols(self):
+        """
+        获取所有股票代码
+        """
+        try:
+            return self.db.query_symbols()
+        except sqlite3.Error as exc:
+            raise DatabaseError("数据库查询失败") from exc

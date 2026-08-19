@@ -2,8 +2,8 @@
 
 ## 项目简介
 
-金融数据分析学习平台（暑期导师式每日任务）。当前完成到 **Day26：统一异常与统一响应**（所有错误响应统一为 `code` + `message`）。
-下一步 **Day27：RESTful API 设计**（完整路线见文末"学习路线规划"）。
+金融数据分析学习平台（暑期导师式每日任务）。当前完成到 **Day27：RESTful API 设计**（`APIRouter` 按资源拆分，`/stocks` 列表 + `/stocks/{symbol}`）。
+下一步 **Day28：金融分析 API**（完整路线见文末"学习路线规划"）。
 
 ## 技术栈
 
@@ -19,7 +19,7 @@
 src/finance_analysis/
 ├── config.py           # 集中配置：PROJECT_ROOT / DATA_PATH / OUTPUT_PATH / DATABASE_PATH / LOG_PATH / LOG_LEVEL
 ├── exceptions.py       # 异常体系（AppError 基类 + 4 个子类，携带 status_code / code）
-├── api/                # FastAPI 应用（app.py：GET /stock/{symbol} + 统一异常处理器，schemas.py：StockResponse 响应模型）
+├── api/                # FastAPI 应用（app.py：include_router + 统一异常处理器 + 旧路径 deprecated；routers/stocks.py：APIRouter；dependencies.py：依赖注入；schemas.py：响应模型）
 ├── services/           # StockService（业务编排：取数 → 异常判断 → 算指标 → 组结果）
 ├── models/             # StockData / StockPool / Portfolio（业务对象）
 ├── repository/         # StockRepository（数据访问层，业务层不直接碰 SQLite）
@@ -47,6 +47,8 @@ src/finance_analysis/
   - 提交：`refactor: extract service layer for stock business logic`
 - Day26（已完成）：统一异常与统一响应（`AppError` 基类携带 `status_code`/`code`；`InvalidDateRangeError` 在 Service 校验 `start > end`；`DatabaseError` 在 Repository 包装 `sqlite3.Error`；`app.py` 注册 `AppError` / `RequestValidationError` 处理器并删光 try/except；错误响应统一为 `{"code", "message"}`）
   - 提交：`feat: unify error handling with code/message responses`
+- Day27（已完成）：RESTful API 设计（`APIRouter(prefix="/stocks", tags=["stocks"])` 按资源拆分；新增 `GET /stocks` 列表接口，数据链 DatabaseManager.query_symbols → StockRepository.get_all_symbols → StockService.list_stocks；`Depends(get_stock_service)` 依赖注入；旧路径 `/stock/{symbol}` 保留并标 `deprecated=True`；测试 8 个全绿）
+  - 提交：`feat: add RESTful stocks router and list endpoint`
 
 ## 约定与注意事项
 
@@ -56,7 +58,7 @@ src/finance_analysis/
 - API 启动：`.venv\Scripts\python.exe -m uvicorn finance_analysis.api.app:app --reload`（交互文档 http://127.0.0.1:8000/docs）
 - 数据库：`database/finance.db` 不入库，新环境用 DatabaseLoader 从 `data/*.csv` 重建
 - 输出产物（`output/`、`*.png`、`*.log`）不入库（.gitignore 已配置）
-- 学习笔记在 `D:\Notes`（Obsidian）：每日笔记 `Learning_Log\2026-08\`，索引 `Learning_Log\_索引.md`，主题笔记 `Programming\Python\`
+- 学习笔记在 `D:\Notes`（Obsidian）：每日笔记 `Learning_Log\Finance_Analysis\2026-08\`，索引 `Learning_Log\Finance_Analysis\_索引.md`，FastAPI 主题笔记 `Programming\FastAPI\`
 
 ## Day24（已完成）
 
@@ -80,6 +82,15 @@ src/finance_analysis/
 - 统一响应：`app.py` 注册 `@app.exception_handler(AppError)` 与 `RequestValidationError` 处理器，路由删光 try/except；所有错误返回 `{"code": ..., "message": ...}`
 - 测试：`test_api.py` 断言改为 `code` 全等 + `message` 子串，新增倒挂区间用例，6 个用例全绿
 
+## Day27（已完成）
+
+- REST 语义：资源名词复数 `/stocks` → `/stocks/{symbol}`，查询参数只做过滤
+- `api/routers/stocks.py`：`APIRouter(prefix="/stocks", tags=["stocks"])`，端点 `GET /stocks`（列表）与 `GET /stocks/{symbol}`（指标）
+- 依赖注入：`api/dependencies.py` 定义 `get_stock_service()`，路由签名 `service: StockService = Depends(get_stock_service)`，避免循环 import，为 Day30 mock 单测铺路
+- 数据链：`DatabaseManager.query_symbols()`（`SELECT DISTINCT symbol ...`）→ `StockRepository.get_all_symbols()`（包 `DatabaseError`）→ `StockService.list_stocks()`
+- 兼容：旧路径 `/stock/{symbol}` 保留并标 `deprecated=True`，/docs 自动标记废弃
+- 测试：主体用例切到 `/stocks/{symbol}`，新增列表与旧路径兼容用例，8 个全绿
+
 ## 学习路线规划（Day25–Day35）
 
 > 阶段定位：Day1–19 是"我会什么"，Day20–24 是"我怎么把它组织起来"，Day25–35 是"把它做成别人能调用、测试、部署的软件"。
@@ -95,7 +106,7 @@ Router → Service → Repository → Database
 
 - **Day25 Service 层与业务逻辑分离**（已完成）：新增 `services/`（如 `StockService`），把编排逻辑从 `app.py` 挪进 Service；`app.py` 只做"收请求、转参数、回 Response Model"。验收：`GET /stock/600519` 行为不变，配套单测通过。
 - **Day26 统一异常与统一响应**（已完成）：扩展 `exceptions.py`（`InvalidDateRangeError` / `DatabaseError` 等），用 FastAPI 异常处理器统一转 JSON（`code` + `message`），去掉接口里散落的 try/except。验收：所有错误响应的结构统一。
-- **Day27 RESTful API 设计**：学 REST 资源语义；用 `APIRouter` 按资源拆分路由；v1.0 前统一资源命名为复数 `/stocks/{symbol}`（旧路径可先保留兼容）；补 `GET /stocks` 列表。验收：`/docs` 结构清晰、无重复代码。
+- **Day27 RESTful API 设计**（已完成）：学 REST 资源语义；用 `APIRouter` 按资源拆分路由；v1.0 前统一资源命名为复数 `/stocks/{symbol}`（旧路径可先保留兼容）；补 `GET /stocks` 列表。验收：`/docs` 结构清晰、无重复代码。
 - **Day28 金融分析 API**：把 Day17–19 能力暴露成接口：`GET /stocks/{symbol}/risk`（收益/波动/回撤/Sharpe）、`/indicators?window=20`（MA/RSI/MACD）。验收：每个新接口都有 pytest 覆盖。
 - **Day29 Portfolio API（含持久化）**：新增 portfolio 表 + `PortfolioRepository` + `PortfolioService`；`POST /portfolios`（请求体 = 权重 dict）、`GET /portfolios/{id}/performance`（组合收益/年化/波动/Sharpe/Benchmark/Excess Return）。验收：组合可入库、可查绩效，接口测试全绿。
 - **Day30 测试体系系统化**：测试金字塔——单元（Service，mock Repository）→ 集成（Repository 用临时数据库）→ API（TestClient）；fixture / monkeypatch / mock；引入覆盖率统计。验收：核心层覆盖率 ≥ 70%。

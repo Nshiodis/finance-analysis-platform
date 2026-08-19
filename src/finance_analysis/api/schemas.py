@@ -9,3 +9,7 @@ class StockResponse(BaseModel):
     volatility: float
     sharpe: float
     max_drawdown: float
+
+
+class StockListResponse(BaseModel):
+    symbols: list[str]
