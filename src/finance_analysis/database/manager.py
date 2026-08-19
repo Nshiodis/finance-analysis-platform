@@ -305,3 +305,19 @@ class DatabaseManager:
         conn.close()
 
         return df
+
+
+    def query_symbols(self, table_name="stock_price"):
+        """
+        查询所有股票代码
+
+        Returns
+        -------
+        list
+        """
+        conn = self.connect()
+        sql = f"SELECT DISTINCT symbol FROM {table_name} ORDER BY symbol"
+        df = pd.read_sql(sql, conn)
+        conn.close()
+        return df["symbol"].tolist()
+        

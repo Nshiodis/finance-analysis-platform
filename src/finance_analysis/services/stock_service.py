@@ -46,3 +46,8 @@ class StockService:
             "sharpe": float(stock.calculate_sharpe_ratio()),
             "max_drawdown": float(stock.calculate_max_drawdown())
         }
+
+
+    def list_stocks(self) -> list[str]:
+        """获取所有股票代码"""
+        return self.repository.get_all_symbols()
