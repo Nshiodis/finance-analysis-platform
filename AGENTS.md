@@ -49,6 +49,8 @@ src/finance_analysis/
   - 提交：`feat: unify error handling with code/message responses`
 - Day27（已完成）：RESTful API 设计（`APIRouter(prefix="/stocks", tags=["stocks"])` 按资源拆分；新增 `GET /stocks` 列表接口，数据链 DatabaseManager.query_symbols → StockRepository.get_all_symbols → StockService.list_stocks；`Depends(get_stock_service)` 依赖注入；旧路径 `/stock/{symbol}` 保留并标 `deprecated=True`；测试 8 个全绿）
   - 提交：`feat: add RESTful stocks router and list endpoint`
+- Review（2026-08-20 已完成）：Day20–27 分层架构整体复盘（代码走查 + 逐层拆解），产出 6 篇笔记：Service 业务 / Router 路由 / Repository 仓库 / DatabaseManager 数据库管理器 / Exceptions 异常 / Models 模型，位于 `D:\Notes\Learning_Log\Finance_Analysis\review\md格式\`
+  - 核心结论：主线骨架 Router → Service → Repository → Database 成立；每层"是什么 / 为什么 / 纪律"已梳理（如 Service 只编排不碰 SQL、Repository 统一翻译 sqlite3.Error、DatabaseManager 参数化查询防注入），为 Day28 新增分析接口打底
 
 ## 约定与注意事项
 
@@ -58,7 +60,7 @@ src/finance_analysis/
 - API 启动：`.venv\Scripts\python.exe -m uvicorn finance_analysis.api.app:app --reload`（交互文档 http://127.0.0.1:8000/docs）
 - 数据库：`database/finance.db` 不入库，新环境用 DatabaseLoader 从 `data/*.csv` 重建
 - 输出产物（`output/`、`*.png`、`*.log`）不入库（.gitignore 已配置）
-- 学习笔记在 `D:\Notes`（Obsidian）：每日笔记 `Learning_Log\Finance_Analysis\2026-08\`，索引 `Learning_Log\Finance_Analysis\_索引.md`，FastAPI 主题笔记 `Programming\FastAPI\`
+- 学习笔记在 `D:\Notes`（Obsidian）：每日笔记 `Learning_Log\Finance_Analysis\2026-08\`，索引 `Learning_Log\Finance_Analysis\_索引.md`，FastAPI 主题笔记 `Programming\FastAPI\`，分层架构 Review 笔记 `Learning_Log\Finance_Analysis\review\md格式\`
 
 ## Day24（已完成）
 
