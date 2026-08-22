@@ -42,6 +42,53 @@ def test_stock_legacy_path(client):
     assert r.status_code == 200
     assert r.json()["rows"] == 1455
 
+
+def test_stock_risk(client):
+    """股票风险指标：200，字段齐全"""
+    r = client.get("/stocks/600519/risk")
+    assert r.status_code == 200
+    data = r.json()
+    assert set(data) == {"symbol", "rows", "total_return", "volatility", "sharpe", "max_drawdown"}
+
+
+def test_stock_indicators(client):
+    """股票指标：200，字段齐全"""
+    r = client.get("/stocks/600519/indicators", params={"window": 20})
+    assert r.status_code == 200
+    data = r.json()
+    assert set(data) == {"symbol", "window", "rows","series"}
+
+
+def test_stock_risk_not_found(client):
+    """风险接口：不存在的股票返回 404"""
+    r = client.get("/stocks/999999/risk")
+    assert r.status_code == 404
+    assert r.json()["code"] == "STOCK_NOT_FOUND"
+
+
+def test_stock_indicators_not_found(client):
+    """指标接口：不存在的股票返回 404"""
+    r = client.get("/stocks/999999/indicators")
+    assert r.status_code == 404
+    assert r.json()["code"] == "STOCK_NOT_FOUND"
+
+
+def test_stock_indicators_series(client):
+    """指标序列：window=20 时有效行数 1436，字段齐全，RSI 在 0~100"""
+    r = client.get("/stocks/600519/indicators", params={"window": 20})
+    data = r.json()
+    assert data["rows"] == 1436
+    assert len(data["series"]) == 1436
+    assert set(data["series"][0]) == {"date", "ma", "rsi", "dif", "dea", "macd"}
+    assert all(0 <= p["rsi"] <= 100 for p in data["series"])
+
+
+def test_stock_indicators_window(client):
+    """window=5 时 MA 预热期变短，有效行数 1451"""
+    r = client.get("/stocks/600519/indicators", params={"window": 5})
+    assert r.json()["rows"] == 1451
+
+
 @pytest.mark.parametrize(
     "path, params, expected_status, expected_code, expected_messages",
     [
