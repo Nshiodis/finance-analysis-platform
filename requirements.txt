@@ -17,6 +17,8 @@ matplotlib==3.11.0
 numpy==2.5.1
 packaging==26.2
 pandas==3.0.3
+# pandas 3.x 不再内置类型标注，strict 类型检查需要
+pandas-stubs==3.0.5.260730
 pillow==12.3.0
 pydantic==2.13.4
 pydantic_core==2.46.4

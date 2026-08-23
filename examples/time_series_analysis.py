@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 from finance_analysis.models.stock import StockData
 
-def main():
+def main() -> None:
     # ==============
     # 读取数据
     # ==============
@@ -76,7 +76,7 @@ def main():
     plt.xticks(rotation=45)
     plt.tight_layout()
 
-    stock.save_plot(plt.gcf(), "price_ma3.png")
+    stock.save_plot("price_ma3.png")
     plt.show()
     plt.close()
 

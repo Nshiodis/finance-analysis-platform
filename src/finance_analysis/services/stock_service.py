@@ -1,4 +1,6 @@
 from datetime import date
+from pathlib import Path
+from typing import Any
 
 import pandas as pd
 
@@ -11,7 +13,7 @@ from finance_analysis.repository.stock_repository import StockRepository
 class StockService:
     """股票业务服务：负责取数、判断、计算指标的编排"""
 
-    def __init__(self, db_path=DATABASE_PATH):
+    def __init__(self, db_path: str | Path = DATABASE_PATH):
         self.repository = StockRepository(db_path)
 
 
@@ -45,7 +47,7 @@ class StockService:
         symbol: str,
         start: date | None = None,
         end: date | None = None,
-    ) -> dict:
+    ) -> dict[str, Any]:
         """获取股票数据"""
         stock = self._get_stock_data(symbol, start, end)
 
@@ -72,7 +74,7 @@ class StockService:
         symbol: str,
         start: date | None = None,
         end: date | None = None,
-    ) -> dict:
+    ) -> dict[str, Any]:
         """获取股票风险指标"""
         stock = self._get_stock_data(symbol, start, end)
 
@@ -94,7 +96,7 @@ class StockService:
         window: int = 20,
         start: date | None = None,
         end: date | None = None,
-    ) -> dict:
+    ) -> dict[str, Any]:
         """获取股票技术指标序列(MA/RSI/MACD)"""
         stock = self._get_stock_data(symbol, start, end)
 

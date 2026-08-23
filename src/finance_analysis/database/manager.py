@@ -1,5 +1,6 @@
 from datetime import date
 import sqlite3
+from pathlib import Path
 import pandas as pd
 import logging
 
@@ -9,10 +10,10 @@ logger = logging.getLogger(__name__)
 class DatabaseManager:
     """SQLite数据库管理器类"""
 
-    def __init__(self, db_path):
+    def __init__(self, db_path: str | Path):
         self.db_path = db_path
 
-    def connect(self):
+    def connect(self) -> sqlite3.Connection:
         """创建数据库连接"""
         try:
             return sqlite3.connect(self.db_path)
@@ -22,9 +23,9 @@ class DatabaseManager:
 
     def create_table_from_dataframe(
         self,
-        df,
-        table_name
-    ):
+        df: pd.DataFrame,
+        table_name: str,
+    ) -> None:
         """
         根据DataFrame自动创建数据表，并根据symbol和date字段创建唯一索引
 
@@ -41,7 +42,7 @@ class DatabaseManager:
 
         cursor = conn.cursor()
 
-        columns = []
+        columns: list[str] = []
 
         for col in df.columns:
 
@@ -75,10 +76,10 @@ class DatabaseManager:
 
     def insert_dataframe(
         self,
-        df,
-        table_name,
-        ignore_duplicates=False
-    ):
+        df: pd.DataFrame,
+        table_name: str,
+        ignore_duplicates: bool = False,
+    ) -> None:
         """
         将 DataFrame 插入数据库
 
@@ -137,8 +138,8 @@ class DatabaseManager:
 
     def execute_query(
             self,
-            sql
-    ):
+            sql: str,
+    ) -> pd.DataFrame:
         """
         执行 SQL 查询并返回结果
 
@@ -164,11 +165,11 @@ class DatabaseManager:
 
     def query_stock(
         self,
-        symbol,
-        start=None,
-        end=None,
-        table_name="stock_price"
-):
+        symbol: str,
+        start: date | None = None,
+        end: date | None = None,
+        table_name: str = "stock_price",
+    ) -> pd.DataFrame:
         """
         根据股票代码查询股票数据
 
@@ -203,8 +204,8 @@ class DatabaseManager:
     
     def check_table_columns(
             self,
-            table_name
-    ):
+            table_name: str,
+    ) -> list[str]:
         """
         查看表字段
         """
@@ -226,7 +227,7 @@ class DatabaseManager:
 
         return columns
 
-    def drop_table(self, table_name):
+    def drop_table(self, table_name: str) -> None:
         """
         删除数据表
         """
@@ -246,9 +247,9 @@ class DatabaseManager:
 
     def create_unique_index(
             self,
-            table_name,
-            columns
-    ):
+            table_name: str,
+            columns: list[str],
+    ) -> None:
         """
         创建唯一索引
 
@@ -281,7 +282,7 @@ class DatabaseManager:
         conn.close()
 
 
-    def read_dataframe(self, table_name):
+    def read_dataframe(self, table_name: str) -> pd.DataFrame:
         """
         从数据库读取数据并转换为 DataFrame
 
@@ -307,7 +308,7 @@ class DatabaseManager:
         return df
 
 
-    def query_symbols(self, table_name="stock_price"):
+    def query_symbols(self, table_name: str = "stock_price") -> list[str]:
         """
         查询所有股票代码
 

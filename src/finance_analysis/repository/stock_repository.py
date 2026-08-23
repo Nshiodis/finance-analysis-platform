@@ -1,5 +1,8 @@
 from datetime import date
 import sqlite3
+from pathlib import Path
+
+import pandas as pd
 
 from finance_analysis.database.manager import DatabaseManager
 from finance_analysis.exceptions import DatabaseError
@@ -8,7 +11,7 @@ from finance_analysis.exceptions import DatabaseError
 class StockRepository:
     """股票数据仓库"""
 
-    def __init__(self, db_path):
+    def __init__(self, db_path: str | Path):
 
         self.db = DatabaseManager(
             db_path
@@ -20,7 +23,7 @@ class StockRepository:
             symbol: str,
             start: date | None = None,
             end: date | None = None,
-    ):
+    ) -> pd.DataFrame:
         """
         根据股票代码获取股票数据
         """
@@ -30,7 +33,7 @@ class StockRepository:
             raise DatabaseError("数据库查询失败") from exc
 
 
-    def get_all_symbols(self):
+    def get_all_symbols(self) -> list[str]:
         """
         获取所有股票代码
         """

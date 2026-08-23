@@ -24,7 +24,7 @@ class StockData:
 
 
     @classmethod
-    def from_dataframe(cls, df):
+    def from_dataframe(cls, df: pd.DataFrame) -> "StockData":
         stock = cls.__new__(cls)
 
         stock.file_name = None
@@ -45,7 +45,7 @@ class StockData:
             symbol: str,
             start: date | None = None,
             end: date | None = None,
-    ):
+    ) -> "StockData":
 
         repo = StockRepository(
             DATABASE_PATH
@@ -74,38 +74,38 @@ class StockData:
 # 数据基本信息
 # =============================================================================
 
-    def info(self):
+    def info(self) -> None:
         """查看数据基本信息"""
         self.df.info()
 
-    def describe(self):
+    def describe(self) -> pd.DataFrame:
         """查看数据统计摘要"""
         return self.df.describe()
 
-    def columns(self):
+    def columns(self) -> pd.Index:
         """查看数据列名"""
         return self.df.columns
     
-    def shape(self):
+    def shape(self) -> tuple[int, int]:
         """查看数据形状"""
         return self.df.shape
     
-    def head(self, n: int = 5):
+    def head(self, n: int = 5) -> pd.DataFrame:
         """查看数据前几行"""
         return self.df.head(n)
     
-    def tail(self, n: int = 5):
+    def tail(self, n: int = 5) -> pd.DataFrame:
         """查看数据后几行"""
         return self.df.tail(n)
     
-    def dtypes(self):
+    def dtypes(self) -> pd.Series:
         """查看各列数据类型"""
         return self.df.dtypes
 # =============================================================================
 # 数据清理
 # =============================================================================
     
-    def clean(self):
+    def clean(self) -> "StockData":
         """清理数据"""
         self.df = self.df.drop_duplicates()
         self.df = self.df.dropna()
@@ -114,7 +114,7 @@ class StockData:
 # =============================================================================
 # 数据转换
 # =============================================================================
-    def to_datetime(self, column: str):
+    def to_datetime(self, column: str) -> "StockData":
         """将指定列转换为日期时间"""
         self.df[column] = pd.to_datetime(self.df[column])
         return self
@@ -122,29 +122,29 @@ class StockData:
 # 数据索引
 # =============================================================================
     
-    def set_index(self, column: str):
+    def set_index(self, column: str) -> "StockData":
         """设置指定列为索引"""
         self.df = self.df.set_index(column)
         return self
 
-    def sort_index(self):
+    def sort_index(self) -> "StockData":
         """按索引排序"""
         self.df = self.df.sort_index()
         return self
 
 
-    def date_index(self):
+    def date_index(self) -> "StockData":
         """将索引转换为日期时间"""
         return self.to_datetime("date").set_index("date")
 # =============================================================================
 # 数据保存
 # =============================================================================
-    def save_plot(self, file_name: str):
+    def save_plot(self, file_name: str) -> "StockData":
         """保存图表"""
         utils.save_plot(plt.gcf(), file_name)
         return self
 
-    def save_csv(self, file_name: str, index: bool = True):
+    def save_csv(self, file_name: str, index: bool = True) -> "StockData":
         """保存数据"""
         utils.save_csv(self.df, file_name, index)
         return self
@@ -152,7 +152,7 @@ class StockData:
 # =============================================================================
 # 技术指标
 # =============================================================================
-    def indicators_info(self):
+    def indicators_info(self) -> None:
         """查看新增指标列名"""
         logger.info(
             "新增指标列名: %s",
@@ -162,15 +162,15 @@ class StockData:
             ]
         )
     
-    def calculate_return(self):
+    def calculate_return(self) -> pd.Series:
         """计算收益率"""
         return indicators.calculate_return(self.df)
 
-    def calculate_total_return(self):
+    def calculate_total_return(self) -> float:
         """计算总收益率"""
         return indicators.calculate_total_return(self.df)
     
-    def calculate_ma(self, window: int = 20):
+    def calculate_ma(self, window: int = 20) -> pd.Series:
         """计算移动平均"""
         return indicators.calculate_ma(
             self.df,
@@ -181,7 +181,7 @@ class StockData:
             self, 
             window: int = 14, 
             method: str = "wilder"
-    ) -> pd.DataFrame:
+    ) -> pd.Series:
         """计算RSI"""
         return indicators.calculate_rsi(
             self.df,
@@ -189,23 +189,23 @@ class StockData:
             method
         )
 
-    def calculate_macd(self):
+    def calculate_macd(self) -> tuple[pd.Series, pd.Series, pd.Series]:
         """计算MACD"""
         return indicators.calculate_macd(self.df)
 
-    def calculate_volatility(self):
+    def calculate_volatility(self) -> float:
         """计算年化波动率"""
         return risk.calculate_volatility(
             self.df
         )
 
-    def calculate_max_drawdown(self):
+    def calculate_max_drawdown(self) -> float:
         """计算最大回撤"""
         return risk.calculate_max_drawdown(
             self.df
         )
 
-    def calculate_sharpe_ratio(self):
+    def calculate_sharpe_ratio(self) -> float:
         """计算夏普比率"""
         return risk.calculate_sharpe_ratio(
             self.df

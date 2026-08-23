@@ -13,9 +13,9 @@ class DatabaseLoader:
 
     def load_stock_csv(
             self,
-            file_path,
-            table_name
-    ):
+            file_path: str | Path,
+            table_name: str,
+    ) -> None:
         """
         CSV导入数据库
 

@@ -10,7 +10,7 @@ def calculate_volatility(df: pd.DataFrame) -> float:
     return annual_volatility
 
 
-def calculate_drawdown(df):
+def calculate_drawdown(df: pd.DataFrame) -> pd.Series:
     """计算回撤序列"""
     cumulative_return = (1 + df["return"]).cumprod()
 

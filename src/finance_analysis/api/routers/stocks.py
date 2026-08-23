@@ -1,4 +1,5 @@
 from datetime import date
+from typing import Any
 
 from fastapi import APIRouter, Depends, Query
 
@@ -13,7 +14,7 @@ router = APIRouter(prefix="/stocks", tags=["stocks"])
 @router.get("", response_model=StockListResponse)
 def list_stocks(
     service: StockService = Depends(get_stock_service)
-):
+) -> dict[str, Any]:
     """获取所有股票代码"""
     return {"symbols": service.list_stocks()}
 
@@ -24,7 +25,7 @@ def get_stock(
     start: date | None = None,
     end: date | None = None,
     service: StockService = Depends(get_stock_service)
-):
+) -> dict[str, Any]:
     """获取股票数据(可选日期范围)"""
     return service.get_stock_metrics(symbol, start, end)
 
@@ -35,7 +36,7 @@ def get_stock_risk(
     start: date | None = None,
     end: date | None = None,
     service: StockService = Depends(get_stock_service)
-):
+) -> dict[str, Any]:
     """获取股票风险指标"""
     return service.get_stock_risk(symbol, start, end)
 
@@ -47,6 +48,6 @@ def get_stock_indicators(
     start: date | None = None,
     end: date | None = None,
     service: StockService = Depends(get_stock_service)
-):
+) -> dict[str, Any]:
     """获取股票技术指标序列(MA/RSI/MACD)"""
     return service.get_stock_indicators(symbol, window, start, end)

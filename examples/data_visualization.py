@@ -3,7 +3,7 @@ import finance_analysis.utils.utils as utils
 import matplotlib.pyplot as plt
 from finance_analysis.config import OUTPUT_PATH
 
-def main():
+def main() -> None:
     # =========================
     # 读取数据
     # =========================

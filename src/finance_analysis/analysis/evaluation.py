@@ -1,3 +1,5 @@
+import pandas as pd
+
 from finance_analysis.analysis.benchmark import Benchmark
 from finance_analysis.models.portfolio import Portfolio
 
@@ -10,7 +12,7 @@ class PerformanceEvaluator:
         self.benchmark = benchmark
 
 
-    def get_returns(self):
+    def get_returns(self) -> tuple[pd.Series, pd.Series]:
         """获取收益序列"""
 
         portfolio_return = (
@@ -27,7 +29,7 @@ class PerformanceEvaluator:
             )
 
 
-    def calculate_excess_return(self):
+    def calculate_excess_return(self) -> pd.Series:
         """计算超额收益率"""
 
         portfolio_return, benchmark_return = self.get_returns()
@@ -39,7 +41,7 @@ class PerformanceEvaluator:
         return excess_return
 
 
-    def summary(self):
+    def summary(self) -> dict[str, float]:
         """返回性能评估摘要"""
 
         return {

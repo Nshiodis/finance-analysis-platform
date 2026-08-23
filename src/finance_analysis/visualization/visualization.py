@@ -1,17 +1,24 @@
+import pandas as pd
+
 import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
 from matplotlib.patches import Patch
 from matplotlib.ticker import PercentFormatter
+
 import finance_analysis.analysis.risk as risk
+from finance_analysis.analysis.benchmark import Benchmark
 import finance_analysis.utils.utils as utils
 import finance_analysis.models.portfolio as portfolio
+from finance_analysis.models.pool import StockPool
+from finance_analysis.models.stock import StockData
 
 
 def plot_price_indicator(
-    df,
+    df: pd.DataFrame,
     file_name: str,
-    price_column="close",
-    indicator_column="MA20",
-):
+    price_column: str = "close",
+    indicator_column: str = "MA20",
+) -> None:
     """
     绘制价格与技术指标
     
@@ -52,9 +59,9 @@ def plot_price_indicator(
 
 
 def plot_return_distribution(
-    df,
+    df: pd.DataFrame,
     file_name: str,
-):
+) -> None:
     """
     绘制收益率分布直方图
     
@@ -80,14 +87,14 @@ def plot_return_distribution(
     plt.legend()
     plt.title("Return Distribution")
     plt.xlabel("Return")
-    plt.ylabel("Frequency")    
+    plt.ylabel("Frequency")
     utils.save_plot(plt.gcf(), file_name)
     plt.show()
 
 def plot_rsi(
-    df,
+    df: pd.DataFrame,
     file_name: str,
-):
+) -> None:
     """
     绘制RSI指标
     
@@ -131,9 +138,9 @@ def plot_rsi(
 
 
 def plot_macd(
-    df,
+    df: pd.DataFrame,
     file_name: str,
-):
+) -> None:
     """
     绘制MACD指标
     
@@ -183,8 +190,8 @@ def plot_macd(
 
     plt.legend(
         handles=[
-            plt.Line2D([], [], label="DIF"),
-            plt.Line2D([], [], label="DEA"),
+            Line2D([], [], label="DIF"),
+            Line2D([], [], label="DEA"),
             red_patch,
             green_patch
         ]
@@ -198,7 +205,7 @@ def plot_macd(
     plt.show()
 
 
-def plot_compare(stock_pool):
+def plot_compare(stock_pool: StockPool) -> None:
     """
     绘制股票池比较收盘价
     
@@ -220,7 +227,7 @@ def plot_compare(stock_pool):
     plt.show()
 
 
-def plot_drawdown(stock):
+def plot_drawdown(stock: StockData) -> None:
     """回撤曲线"""
     drawdown = risk.calculate_drawdown(stock.df)
     max_drawdown = drawdown.min()
@@ -240,11 +247,11 @@ def plot_drawdown(stock):
     utils.save_plot(plt.gcf(), "drawdown_curve")
     plt.show()
 
-def plot_risk_return(risk_df):
+def plot_risk_return(risk_df: pd.DataFrame) -> None:
     plt.figure(figsize=(12,6))
     plt.scatter(risk_df["volatility"], risk_df["total_return"])
 
-    for i,row in risk_df.iterrows():
+    for _,row in risk_df.iterrows():
         plt.text(
             row["volatility"],
             row["total_return"],
@@ -260,7 +267,7 @@ def plot_risk_return(risk_df):
     plt.show()
 
 
-def plot_portfolio_curve(portfolio):
+def plot_portfolio_curve(portfolio: portfolio.Portfolio) -> None:
     """
     绘制投资组合净值曲线
     
@@ -282,7 +289,9 @@ def plot_portfolio_curve(portfolio):
     plt.show()
 
 
-def plot_portfolio_return_distribution(portfolio): 
+def plot_portfolio_return_distribution(
+    portfolio: portfolio.Portfolio,
+) -> None:
     """
     绘制组合每日收益率分布
     """
@@ -313,7 +322,10 @@ def plot_portfolio_return_distribution(portfolio):
     plt.show()
 
 
-def plot_performance_curve(portfolio, benchmark):
+def plot_performance_curve(
+    portfolio: portfolio.Portfolio,
+    benchmark: Benchmark,
+) -> None:
     """
     绘制组合和基准的净值曲线
     """

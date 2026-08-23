@@ -32,7 +32,7 @@ class Portfolio:
         self.stocks = stocks
 
             # 缓存组合收益率
-        self._returns = None
+        self._returns: pd.Series | None = None
 
 
     def calculate_return(self) -> pd.Series:
@@ -42,7 +42,7 @@ class Portfolio:
         if self._returns is not None:
             return self._returns
         
-        portfolio_return = None
+        portfolio_return: pd.Series | None = None
 
         for stock, weight in self.stocks.items():
 
@@ -54,7 +54,8 @@ class Portfolio:
                 portfolio_return += weighted_return
 
         self._returns = portfolio_return
-        
+
+        assert self._returns is not None
         return self._returns
 
 

@@ -1,23 +1,26 @@
 import pandas as pd
 
-def calculate_return(df: pd.DataFrame):
+
+def calculate_return(df: pd.DataFrame) -> pd.Series:
     """计算收益率"""
     df["return"] = df["close"].pct_change()
     return df["return"]
 
-def calculate_total_return(df):
+
+def calculate_total_return(df: pd.DataFrame) -> float:
     """计算总收益率"""
     calculate_return(df)
-    
-    total_return =(
+
+    total_return = (
         (1 + df["return"])
         .cumprod()
         .iloc[-1]
         - 1
     )
     return total_return
-    
-def calculate_ma(df: pd.DataFrame, window: int = 20):
+
+
+def calculate_ma(df: pd.DataFrame, window: int = 20) -> pd.Series:
     """计算移动平均"""
     df[f"MA{window}"] = (
         df["close"]
@@ -30,7 +33,7 @@ def calculate_rsi(
         df: pd.DataFrame,
         window: int = 14,
         method: str = "wilder"
-    ) -> pd.DataFrame:
+    ) -> pd.Series:
     """计算RSI"""
 
     delta = df["close"].diff()
@@ -69,7 +72,10 @@ def calculate_rsi(
 
     return df["RSI"]
 
-def calculate_macd(df: pd.DataFrame):
+
+def calculate_macd(
+    df: pd.DataFrame,
+) -> tuple[pd.Series, pd.Series, pd.Series]:
     """计算MACD"""
 
     ema12 = df["close"].ewm(

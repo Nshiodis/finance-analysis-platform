@@ -1,3 +1,5 @@
+import pandas as pd
+
 from finance_analysis.models.stock import StockData
 
 
@@ -8,14 +10,13 @@ class Benchmark:
         self.stock_data = stock_data
 
 
-    def calculate_return(self):
+    def calculate_return(self) -> pd.Series:
         """计算市场基准收益率"""
 
         return self.stock_data.calculate_return()
 
 
-    def calculate_total_return(self):
+    def calculate_total_return(self) -> float:
         """计算市场基准总收益率"""
 
         return self.stock_data.calculate_total_return()
-    

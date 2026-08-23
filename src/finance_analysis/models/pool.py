@@ -1,10 +1,11 @@
 from finance_analysis.models.stock import StockData
+from typing import Any
 
 
 class StockPool:
     """股票池"""
 
-    def __init__(self, files, folder="data"):
+    def __init__(self, files: list[str], folder: str = "data"):
 
         self.stocks: list[StockData] = []
 
@@ -20,7 +21,7 @@ class StockPool:
     def from_stocks(
             cls,
             stocks: list[StockData]
-    ):
+    ) -> "StockPool":
         """根据 StockData 对象列表创建股票池"""
 
         pool = cls.__new__(cls)
@@ -34,10 +35,10 @@ class StockPool:
     def from_database(
             cls,
             symbols: list[str]
-    ):
+    ) -> "StockPool":
         """从数据库创建股票池"""
 
-        stocks = []
+        stocks: list[StockData] = []
 
         for symbol in symbols:
 
@@ -50,7 +51,7 @@ class StockPool:
         return cls.from_stocks(stocks)
 
     
-    def set_index(self, index_col="date") -> None:
+    def set_index(self, index_col: str = "date") -> None:
         """设置股票池的索引"""
         for stock in self.stocks:
             stock.to_datetime(index_col)
@@ -64,9 +65,9 @@ class StockPool:
             stock.calculate_return()
 
 
-    def get_summary(self) -> list:
+    def get_summary(self) -> list[dict[str, Any]]:
         """比较收益"""
-        result = []
+        result: list[dict[str, Any]] = []
         for stock in self.stocks:
             result.append({
                 "stock": stock.file_name,
@@ -75,16 +76,16 @@ class StockPool:
         return result
 
 
-    def sort_by_total_return(self) -> list:
+    def sort_by_total_return(self) -> list[dict[str, Any]]:
         """按总收益排序"""
         result = self.get_summary()
         result.sort(key=lambda x: x["total_return"], reverse=True)
         return result
 
 
-    def compare_risk(self):
+    def compare_risk(self) -> list[dict[str, Any]]:
         """比较风险"""
-        result = []
+        result: list[dict[str, Any]] = []
 
         for stock in self.stocks:
 

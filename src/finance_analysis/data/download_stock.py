@@ -6,7 +6,7 @@ def download_stock(
         start_date: str,
         end_date: str,
         file_name: str,
-):
+) -> None:
     """
     下载股票历史数据
 
@@ -52,7 +52,7 @@ def download_index(
         start_date: str,
         end_date: str,
         file_name: str,
-):
+) -> None:
     """
     下载指数历史数据
 
@@ -93,7 +93,7 @@ def download_index(
     print("下载完成") 
 
 
-def main():
+def main() -> None:
 
     download_index(
         symbol="sh000300",

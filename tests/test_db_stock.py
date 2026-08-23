@@ -1,4 +1,3 @@
-from finance_analysis.models.stock import StockData
 from finance_analysis.models.pool import StockPool
 
 
