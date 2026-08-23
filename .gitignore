@@ -36,3 +36,6 @@ output/
 
 # Pytest cache
 .pytest_cache/
+
+# Local private agent context (never commit)
+AGENTS.local.md

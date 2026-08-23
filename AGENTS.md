@@ -56,13 +56,11 @@ src/finance_analysis/
 
 ## 约定与注意事项
 
-
 - 测试在 `tests/test_*.py`：原有为脚本式（`$env:MPLBACKEND='Agg'` 后逐个 `python` 运行）；`test_api.py` 为 pytest 式（`.venv\Scripts\python.exe -m pytest tests/test_api.py -v`）
 - 日志：程序入口调用一次 `finance_analysis.utils.logger.setup_logging()`
 - API 启动：`.venv\Scripts\python.exe -m uvicorn finance_analysis.api.app:app --reload`（交互文档 http://127.0.0.1:8000/docs）
 - 数据库：`database/finance.db` 不入库，新环境用 DatabaseLoader 从 `data/*.csv` 重建
 - 输出产物（`output/`、`*.png`、`*.log`）不入库（.gitignore 已配置）
-
 
 ## Day24（已完成）
 
@@ -131,7 +129,6 @@ Router → Service → Repository → Database
 
 ### 贯穿原则
 
-
-
+- 每个接口/每层改动当天补 pytest + git 提交 + 学习笔记（本地记录不入库）
 - 一切为"可调用、可测试、可部署"服务
 
