@@ -2,8 +2,8 @@
 
 ## 项目简介
 
-金融数据分析学习平台。当前完成到 **Day27：RESTful API 设计**（`APIRouter` 按资源拆分，`/stocks` 列表 + `/stocks/{symbol}`）。
-下一步 **Day28：金融分析 API**（完整路线见文末"学习路线规划"）。
+金融数据分析学习平台。当前完成到 **Day28：金融分析 API**（`APIRouter` 按资源拆分，`/stocks` 列表 + `/stocks/{symbol}`）。
+下一步 **Day29：Portfolio API（含持久化）**（完整路线见文末"学习路线规划"）。
 
 ## 技术栈
 
@@ -49,6 +49,8 @@ src/finance_analysis/
   - 提交：`feat: unify error handling with code/message responses`
 - Day27（已完成）：RESTful API 设计（`APIRouter(prefix="/stocks", tags=["stocks"])` 按资源拆分；新增 `GET /stocks` 列表接口，数据链 DatabaseManager.query_symbols → StockRepository.get_all_symbols → StockService.list_stocks；`Depends(get_stock_service)` 依赖注入；旧路径 `/stock/{symbol}` 保留并标 `deprecated=True`；测试 8 个全绿）
   - 提交：`feat: add RESTful stocks router and list endpoint`
+- Day28（已完成）：金融分析 API（新增 `GET /stocks/{symbol}/risk`（收益/波动/回撤/Sharpe）与 `GET /stocks/{symbol}/indicators?window=20`（MA/RSI/MACD 序列）；`schemas.py` 新增 `RiskResponse`/`IndicatorPoint`/`IndicatorsResponse`；Service 抽取 `_get_stock_data()` 共用“取数 + 空判断”；`window: int = Query(20, ge=1)` 声明式校验；测试 14 个全绿）
+  - 提交：`feat: add risk and indicators analysis API`
 - Review（2026-08-20 已完成）：Day20–27 分层架构整体复盘（代码走查 + 逐层拆解），产出 6 篇笔记：Service 业务 / Router 路由 / Repository 仓库 / DatabaseManager 数据库管理器 / Exceptions 异常 / Models 模型
   - 核心结论：主线骨架 Router → Service → Repository → Database 成立；每层"是什么 / 为什么 / 纪律"已梳理（如 Service 只编排不碰 SQL、Repository 统一翻译 sqlite3.Error、DatabaseManager 参数化查询防注入），为 Day28 新增分析接口打底
 
@@ -93,6 +95,15 @@ src/finance_analysis/
 - 兼容：旧路径 `/stock/{symbol}` 保留并标 `deprecated=True`，/docs 自动标记废弃
 - 测试：主体用例切到 `/stocks/{symbol}`，新增列表与旧路径兼容用例，8 个全绿
 
+## Day28（已完成）
+
+- REST 子资源：`/stocks/{symbol}/risk`（风险标量）、`/stocks/{symbol}/indicators`（指标序列）；指标挂在股票下面，不写“没有主体”的 `/indicators`
+- Service 复用：抽取 `_get_stock_data()`（取数 + 空判断），`get_stock_metrics` / `get_stock_risk` / `get_stock_indicators` 共用，不复制三份
+- 序列化：先算指标、后对指标列 `dropna()`（MA 预热期 NaN 不能进 JSON），再 `to_dict("records")` 每行一个 dict；`rows` = 有效行数（window=20 → 1436）
+- 参数校验：`window: int = Query(20, ge=1)`——类型注解自动转 int + 默认值 + ge 规则，非法输入自动 422
+- 契约适配：底层列名 `MA20/RSI/DIF/DEA/MACD` 不动，Service 里 `rename` 成小写（底层稳定，适配在边界）
+- 测试：14 个全绿（新增 risk/indicators 404、序列 1436 行、window=5 的 1451 行）
+- 提交：`feat: add risk and indicators analysis API`
 ## 学习路线规划（Day25–Day35）
 
 > 阶段定位：Day1–19 是"我会什么"，Day20–24 是"我怎么把它组织起来"，Day25–35 是"把它做成别人能调用、测试、部署的软件"。
@@ -109,7 +120,7 @@ Router → Service → Repository → Database
 - **Day25 Service 层与业务逻辑分离**（已完成）：新增 `services/`（如 `StockService`），把编排逻辑从 `app.py` 挪进 Service；`app.py` 只做"收请求、转参数、回 Response Model"。验收：`GET /stock/600519` 行为不变，配套单测通过。
 - **Day26 统一异常与统一响应**（已完成）：扩展 `exceptions.py`（`InvalidDateRangeError` / `DatabaseError` 等），用 FastAPI 异常处理器统一转 JSON（`code` + `message`），去掉接口里散落的 try/except。验收：所有错误响应的结构统一。
 - **Day27 RESTful API 设计**（已完成）：学 REST 资源语义；用 `APIRouter` 按资源拆分路由；v1.0 前统一资源命名为复数 `/stocks/{symbol}`（旧路径可先保留兼容）；补 `GET /stocks` 列表。验收：`/docs` 结构清晰、无重复代码。
-- **Day28 金融分析 API**：把 Day17–19 能力暴露成接口：`GET /stocks/{symbol}/risk`（收益/波动/回撤/Sharpe）、`/indicators?window=20`（MA/RSI/MACD）。验收：每个新接口都有 pytest 覆盖。
+- **Day28 金融分析 API**（已完成）：把 Day17–19 能力暴露成接口：`GET /stocks/{symbol}/risk`（收益/波动/回撤/Sharpe）、`/stocks/{symbol}/indicators?window=20`（MA/RSI/MACD）。验收：每个新接口都有 pytest 覆盖（14 个全绿）。
 - **Day29 Portfolio API（含持久化）**：新增 portfolio 表 + `PortfolioRepository` + `PortfolioService`；`POST /portfolios`（请求体 = 权重 dict）、`GET /portfolios/{id}/performance`（组合收益/年化/波动/Sharpe/Benchmark/Excess Return）。验收：组合可入库、可查绩效，接口测试全绿。
 - **Day30 测试体系系统化**：测试金字塔——单元（Service，mock Repository）→ 集成（Repository 用临时数据库）→ API（TestClient）；fixture / monkeypatch / mock；引入覆盖率统计。验收：核心层覆盖率 ≥ 70%。
 - **Day31 日志与可观测性**：请求日志中间件（method / path / status / 耗时）；分层日志（INFO 查询参数、WARNING 未命中、ERROR 数据库失败）；不记录敏感信息。验收：一条请求在日志里可完整追踪。
@@ -123,3 +134,4 @@ Router → Service → Repository → Database
 
 
 - 一切为"可调用、可测试、可部署"服务
+
