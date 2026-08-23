@@ -53,6 +53,12 @@ src/finance_analysis/
   - 提交：`feat: add risk and indicators analysis API`
 - Review（2026-08-20 已完成）：Day20–27 分层架构整体复盘（代码走查 + 逐层拆解），产出 6 篇笔记：Service 业务 / Router 路由 / Repository 仓库 / DatabaseManager 数据库管理器 / Exceptions 异常 / Models 模型
   - 核心结论：主线骨架 Router → Service → Repository → Database 成立；每层"是什么 / 为什么 / 纪律"已梳理（如 Service 只编排不碰 SQL、Repository 统一翻译 sqlite3.Error、DatabaseManager 参数化查询防注入），为 Day28 新增分析接口打底
+- 类型检查（2026-08-24 已完成）：Pylance strict 全量标红修复（616 → 0 error）
+  - 提交：`chore: fix Pylance strict type errors with annotations and local stubs`
+  - 手法：全量补参数/返回注解（不改业务逻辑、不改变量名）；`calculate_rsi`/`StockData.calculate_rsi` 返回类型修正为 `pd.Series`；`Portfolio.calculate_return`、`DatabaseManager.insert_portfolio` 用 assert 收窄 `None`；测试 fixture 的 `TestClient` 声明为 `httpx.Client`（绕开 pyright 对 starlette 重载的 Unknown）
+  - 依赖：pandas 3.x 不再内置类型标注 → requirements 增加 `pandas-stubs`；matplotlib（`**kwargs: Unknown`）与 akshare（无 stub）→ 本地 stub `typings/`（matplotlib.pyplot / matplotlib.figure / akshare），业务代码零 `# pyright: ignore`；以后新增 `plt.*` 用法需同步在 `typings/matplotlib/pyplot.pyi` 补一行
+  - 配置：不提交 pyrightconfig.json（Pylance 走 VS Code strict 设置；stub 走默认 stubPath `./typings`）
+  - 环境：`.venv` editable 安装曾指向旧路径，已 `pip install -e .` 修复；pytest 无需 PYTHONPATH 即可运行
 
 ## 约定与注意事项
 
