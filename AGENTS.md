@@ -5,6 +5,10 @@
 金融数据分析学习平台。当前完成到 **Day29：Portfolio API（含持久化）**（`POST /portfolios` + `GET /portfolios/{id}/performance`）。
 下一步 **Day30：测试体系系统化**（完整路线见文末"学习路线规划"）。
 
+## 开始任务前必读
+
+- 每次开始任务（包括新对话）前，先读取同目录的 `AGENTS.local.md`——本机路径、笔记位置、协作方式等个人上下文都写在那里（该文件已被 .gitignore 忽略，不会提交）。
+
 ## 技术栈
 
 - Python 3.13 + Pandas + Matplotlib + SQLite（标准库 `sqlite3`）
