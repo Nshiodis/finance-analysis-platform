@@ -2,8 +2,8 @@
 
 ## 项目简介
 
-金融数据分析学习平台。当前完成到 **Day28：金融分析 API**（`APIRouter` 按资源拆分，`/stocks` 列表 + `/stocks/{symbol}`）。
-下一步 **Day29：Portfolio API（含持久化）**（完整路线见文末"学习路线规划"）。
+金融数据分析学习平台。当前完成到 **Day29：Portfolio API（含持久化）**（`POST /portfolios` + `GET /portfolios/{id}/performance`）。
+下一步 **Day30：测试体系系统化**（完整路线见文末"学习路线规划"）。
 
 ## 技术栈
 
@@ -19,10 +19,10 @@
 src/finance_analysis/
 ├── config.py           # 集中配置：PROJECT_ROOT / DATA_PATH / OUTPUT_PATH / DATABASE_PATH / LOG_PATH / LOG_LEVEL
 ├── exceptions.py       # 异常体系（AppError 基类 + 4 个子类，携带 status_code / code）
-├── api/                # FastAPI 应用（app.py：include_router + 统一异常处理器 + 旧路径 deprecated；routers/stocks.py：APIRouter；dependencies.py：依赖注入；schemas.py：响应模型）
-├── services/           # StockService（业务编排：取数 → 异常判断 → 算指标 → 组结果）
+├── api/                # FastAPI 应用（app.py：include_router + 统一异常处理器 + 旧路径 deprecated；routers/stocks.py / portfolios.py：APIRouter；dependencies.py：依赖注入；schemas.py：响应模型）
+├── services/           # StockService / PortfolioService（业务编排）
 ├── models/             # StockData / StockPool / Portfolio（业务对象）
-├── repository/         # StockRepository（数据访问层，业务层不直接碰 SQLite）
+├── repository/         # StockRepository / PortfolioRepository（数据访问层，业务层不直接碰 SQLite）
 ├── database/           # manager.py（DatabaseManager）/ loader.py（DatabaseLoader）
 ├── analysis/           # indicators / risk / evaluation / benchmark
 ├── data/               # download_stock.py
@@ -60,6 +60,8 @@ src/finance_analysis/
   - 配置：pyproject.toml 显式声明 `[tool.pyright] typeCheckingMode="strict"` + `stubPath="typings"`；不提交 pyrightconfig.json（Pylance 走 VS Code strict 设置）
   - 环境：`.venv` editable 安装曾指向旧路径，已 `pip install -e .` 修复；pytest 无需 PYTHONPATH 即可运行
   - 补充（stub 质量审查）：提交 `chore: pin pyright strict config and refine local type stubs`；stub 返回值尽量真实类型（Text/Legend/Line2D/BarContainer/PathCollection…），保留 Any 仅限三类——pandas Index/Series 无法装进 matplotlib ArrayLike 的数据参数、Artist 动态属性 kwargs、`gca()`（真实 Axes.set_major_formatter 参数无注解）；akshare 签名与 1.18.70 对齐；社区 matplotlib-stubs 实测更差（strict 下 20 错），不采用
+- Day29（已完成）：Portfolio API（含持久化）（新增 portfolio 表，weights 存 JSON 列；PortfolioRepository 管 JSON 编解码 + 自增 id；PortfolioService 校验权重（空/负/和≠1 → 422）→ 组装 Portfolio（date_index() 日期对齐）→ PerformanceEvaluator 算绩效；`POST /portfolios`（201）+ `GET /portfolios/{id}/performance`；测试 19 个全绿）
+  - 提交：`feat: add portfolio API with persistence`
 
 ## 约定与注意事项
 
@@ -109,6 +111,15 @@ src/finance_analysis/
 - 契约适配：底层列名 `MA20/RSI/DIF/DEA/MACD` 不动，Service 里 `rename` 成小写（底层稳定，适配在边界）
 - 测试：14 个全绿（新增 risk/indicators 404、序列 1436 行、window=5 的 1451 行）
 - 提交：`feat: add risk and indicators analysis API`
+## Day29（已完成）
+
+- REST 资源创建：`POST /portfolios`（请求体 = 权重 dict，返回 201 + id + weights）；子资源 `GET /portfolios/{id}/performance`
+- 持久化：portfolio 表 `weights TEXT` 存 JSON 列；`cursor.lastrowid` 取自增 id；`commit()` 必须在 `close()` 前；建表 `CREATE TABLE IF NOT EXISTS`（Repository 构造时调用）
+- 分层：JSON 编解码放 Repository（manager 只碰 SQL）；"查找型"仓库 `df.empty → None`，抛 404 归 Service
+- Service 复用：`Portfolio` / `Benchmark` / `PerformanceEvaluator` 全部复用 Day18-19；`date_index()` 按日期对齐是纪律（pandas 按索引相加）
+- 校验：空 / 负权重 / 权重和≠1 → `InvalidPortfolioError`(422) fail fast，不裸抛 ValueError
+- 测试：19 个全绿（新增创建 201、绩效字段、404、空权重 422、权重和≠1 422）
+- 提交：`feat: add portfolio API with persistence`
 ## 学习路线规划（Day25–Day35）
 
 > 阶段定位：Day1–19 是"我会什么"，Day20–24 是"我怎么把它组织起来"，Day25–35 是"把它做成别人能调用、测试、部署的软件"。
@@ -126,7 +137,7 @@ Router → Service → Repository → Database
 - **Day26 统一异常与统一响应**（已完成）：扩展 `exceptions.py`（`InvalidDateRangeError` / `DatabaseError` 等），用 FastAPI 异常处理器统一转 JSON（`code` + `message`），去掉接口里散落的 try/except。验收：所有错误响应的结构统一。
 - **Day27 RESTful API 设计**（已完成）：学 REST 资源语义；用 `APIRouter` 按资源拆分路由；v1.0 前统一资源命名为复数 `/stocks/{symbol}`（旧路径可先保留兼容）；补 `GET /stocks` 列表。验收：`/docs` 结构清晰、无重复代码。
 - **Day28 金融分析 API**（已完成）：把 Day17–19 能力暴露成接口：`GET /stocks/{symbol}/risk`（收益/波动/回撤/Sharpe）、`/stocks/{symbol}/indicators?window=20`（MA/RSI/MACD）。验收：每个新接口都有 pytest 覆盖（14 个全绿）。
-- **Day29 Portfolio API（含持久化）**：新增 portfolio 表 + `PortfolioRepository` + `PortfolioService`；`POST /portfolios`（请求体 = 权重 dict）、`GET /portfolios/{id}/performance`（组合收益/年化/波动/Sharpe/Benchmark/Excess Return）。验收：组合可入库、可查绩效，接口测试全绿。
+- **Day29 Portfolio API（含持久化）**（已完成）：新增 portfolio 表 + `PortfolioRepository` + `PortfolioService`；`POST /portfolios`（请求体 = 权重 dict）、`GET /portfolios/{id}/performance`（组合收益/年化/波动/Sharpe/Benchmark/Excess Return）。验收：组合可入库、可查绩效，接口测试全绿（19 个全绿）。
 - **Day30 测试体系系统化**：测试金字塔——单元（Service，mock Repository）→ 集成（Repository 用临时数据库）→ API（TestClient）；fixture / monkeypatch / mock；引入覆盖率统计。验收：核心层覆盖率 ≥ 70%。
 - **Day31 日志与可观测性**：请求日志中间件（method / path / status / 耗时）；分层日志（INFO 查询参数、WARNING 未命中、ERROR 数据库失败）；不记录敏感信息。验收：一条请求在日志里可完整追踪。
 - **Day32 配置与环境管理**：引入 pydantic-settings + `.env`；按 development / testing / production 区分配置；测试用独立临时数据库。验收：改环境变量即可切换环境，代码里无硬编码路径。
@@ -138,4 +149,3 @@ Router → Service → Repository → Database
 
 - 每个接口/每层改动当天补 pytest + git 提交 + 学习笔记（本地记录不入库）
 - 一切为"可调用、可测试、可部署"服务
-
