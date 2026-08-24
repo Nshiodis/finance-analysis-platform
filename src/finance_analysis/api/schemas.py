@@ -39,3 +39,22 @@ class IndicatorsResponse(BaseModel):
     window: int
     rows: int
     series: list[IndicatorPoint]
+
+
+class PortfolioCreate(BaseModel):
+    weights: dict[str, float]
+
+
+class PortfolioResponse(BaseModel):
+    id: int
+    weights: dict[str, float]
+
+
+class PortfolioPerformanceResponse(BaseModel):
+    id: int
+    portfolio_total_return: float
+    annualized_return: float
+    volatility: float
+    sharpe: float
+    benchmark_total_return: float
+    excess_total_return: float

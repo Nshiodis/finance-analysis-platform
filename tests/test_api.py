@@ -114,3 +114,45 @@ def test_stock_error_cases(
     assert data["code"] == expected_code
     if expected_messages is not None:
         assert expected_messages in data["message"]
+
+
+def test_create_portfolio(client: httpx.Client) -> None:
+    """创建组合：201，id + weights 返回"""
+    r = client.post("/portfolios", json={"weights": {"600519": 0.5, "000858": 0.5}})
+    assert r.status_code == 201
+    data = r.json()
+    assert isinstance(data["id"], int)
+    assert data["weights"] == {"600519": 0.5, "000858": 0.5}
+
+
+def test_portfolio_performance(client: httpx.Client) -> None:
+    """创建后查绩效：能查出来本身就证明"已入库"""
+    r = client.post("/portfolios", json={"weights": {"600519": 0.5, "000858": 0.5}})
+    portfolio_id = r.json()["id"]
+
+    r2 = client.get(f"/portfolios/{portfolio_id}/performance")
+    assert r2.status_code == 200
+    assert set(r2.json()) == {"id", "portfolio_total_return", "annualized_return",
+                              "volatility", "sharpe", "benchmark_total_return",
+                              "excess_total_return"}
+
+
+def test_portfolio_not_found(client: httpx.Client) -> None:
+    """不存在的组合：404"""
+    r = client.get("/portfolios/999999/performance")
+    assert r.status_code == 404
+    assert r.json()["code"] == "PORTFOLIO_NOT_FOUND"
+
+
+def test_portfolio_invalid_empty(client: httpx.Client) -> None:
+    """空权重：422"""
+    r = client.post("/portfolios", json={"weights": {}})
+    assert r.status_code == 422
+    assert r.json()["code"] == "INVALID_PORTFOLIO"
+
+
+def test_portfolio_invalid_weight_sum(client: httpx.Client) -> None:
+    """权重和不为 1：422"""
+    r = client.post("/portfolios", json={"weights": {"600519": 0.2}})
+    assert r.status_code == 422
+    assert r.json()["code"] == "INVALID_PORTFOLIO"

@@ -321,4 +321,59 @@ class DatabaseManager:
         df = pd.read_sql(sql, conn)
         conn.close()
         return df["symbol"].tolist()
-        
+
+
+    def create_portfolio_table(self, table_name: str = "portfolio") -> None:
+        """
+        创建组合表
+        """
+        conn = self.connect()
+        cursor = conn.cursor()
+        cursor.execute(
+            f"""
+            CREATE TABLE IF NOT EXISTS "{table_name}"
+            (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                weights TEXT NOT NULL,
+                created_at TEXT NOT NULL
+            )
+            """
+        )
+        conn.commit()
+        conn.close()
+
+
+    def insert_portfolio(
+        self,
+        weights_json: str,
+        created_at: str,
+        table_name: str = "portfolio",
+    ) -> int:
+        """插入一条组合，返回自增 id"""
+        conn = self.connect()
+        cursor = conn.cursor()
+        cursor.execute(
+            f'INSERT INTO "{table_name}" (weights, created_at) VALUES (?, ?)',
+            (weights_json, created_at)
+        )
+        conn.commit()
+        portfolio_id = cursor.lastrowid
+        assert portfolio_id is not None
+        conn.close()
+        return portfolio_id
+
+
+    def query_portfolio(
+        self,
+        portfolio_id: int,
+        table_name: str = "portfolio",
+    ) -> pd.DataFrame:
+        """按 id 查询组合，返回 DataFrame（不存在则返回空表）"""
+        conn = self.connect()
+        df = pd.read_sql(
+            f'SELECT * FROM "{table_name}" WHERE id = ?',
+            conn,
+            params=(portfolio_id,)
+        )
+        conn.close()
+        return df

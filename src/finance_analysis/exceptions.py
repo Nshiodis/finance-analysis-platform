@@ -26,3 +26,15 @@ class DatabaseError(AppError):
     """数据库错误"""
     status_code = 500
     code = "DATABASE_ERROR"
+
+
+class PortfolioNotFoundError(AppError):
+    """组合不存在"""
+    status_code = 404
+    code = "PORTFOLIO_NOT_FOUND"
+
+
+class InvalidPortfolioError(AppError):
+    """无效组合"""
+    status_code = 422
+    code = "INVALID_PORTFOLIO"

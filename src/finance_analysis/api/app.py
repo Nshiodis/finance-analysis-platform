@@ -6,7 +6,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 from finance_analysis.api.dependencies import get_stock_service
-from finance_analysis.api.routers import stocks
+from finance_analysis.api.routers import portfolios, stocks
 from finance_analysis.api.schemas import StockResponse
 from finance_analysis.exceptions import AppError
 from finance_analysis.services.stock_service import StockService
@@ -38,6 +38,7 @@ async def handle_request_validation_error(
 
 
 app.include_router(stocks.router)
+app.include_router(portfolios.router)
 
 
 @app.get("/stock/{symbol}", response_model=StockResponse, deprecated=True)
