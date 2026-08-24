@@ -11,3 +11,8 @@ description = "Financial data analysis platform"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+
+[tool.pyright]
+typeCheckingMode = "strict"
+stubPath = "typings"
