@@ -57,8 +57,9 @@ src/finance_analysis/
   - 提交：`chore: fix Pylance strict type errors with annotations and local stubs`
   - 手法：全量补参数/返回注解（不改业务逻辑、不改变量名）；`calculate_rsi`/`StockData.calculate_rsi` 返回类型修正为 `pd.Series`；`Portfolio.calculate_return`、`DatabaseManager.insert_portfolio` 用 assert 收窄 `None`；测试 fixture 的 `TestClient` 声明为 `httpx.Client`（绕开 pyright 对 starlette 重载的 Unknown）
   - 依赖：pandas 3.x 不再内置类型标注 → requirements 增加 `pandas-stubs`；matplotlib（`**kwargs: Unknown`）与 akshare（无 stub）→ 本地 stub `typings/`（matplotlib.pyplot / matplotlib.figure / akshare），业务代码零 `# pyright: ignore`；以后新增 `plt.*` 用法需同步在 `typings/matplotlib/pyplot.pyi` 补一行
-  - 配置：不提交 pyrightconfig.json（Pylance 走 VS Code strict 设置；stub 走默认 stubPath `./typings`）
+  - 配置：pyproject.toml 显式声明 `[tool.pyright] typeCheckingMode="strict"` + `stubPath="typings"`；不提交 pyrightconfig.json（Pylance 走 VS Code strict 设置）
   - 环境：`.venv` editable 安装曾指向旧路径，已 `pip install -e .` 修复；pytest 无需 PYTHONPATH 即可运行
+  - 补充（stub 质量审查）：提交 `chore: pin pyright strict config and refine local type stubs`；stub 返回值尽量真实类型（Text/Legend/Line2D/BarContainer/PathCollection…），保留 Any 仅限三类——pandas Index/Series 无法装进 matplotlib ArrayLike 的数据参数、Artist 动态属性 kwargs、`gca()`（真实 Axes.set_major_formatter 参数无注解）；akshare 签名与 1.18.70 对齐；社区 matplotlib-stubs 实测更差（strict 下 20 错），不采用
 
 ## 约定与注意事项
 
