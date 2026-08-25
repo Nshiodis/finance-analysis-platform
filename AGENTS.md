@@ -75,6 +75,7 @@ src/finance_analysis/
 - API 启动：`.venv\Scripts\python.exe -m uvicorn finance_analysis.api.app:app --reload`（交互文档 http://127.0.0.1:8000/docs）
 - 数据库：`database/finance.db` 不入库，新环境用 DatabaseLoader 从 `data/*.csv` 重建
 - 输出产物（`output/`、`*.png`、`*.log`）不入库（.gitignore 已配置）
+- 笔记要求：每天写 Obsidian 笔记（日志 + 主题）时必须包含当天知识点，尤其要收录用户提问过的问题与踩过的坑（含结论），不要只写"做了什么"
 
 ## Day24（已完成）
 
