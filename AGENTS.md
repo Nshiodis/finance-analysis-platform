@@ -70,6 +70,7 @@ src/finance_analysis/
 ## 约定与注意事项
 
 - 测试在 `tests/test_*.py`：原有为脚本式（`$env:MPLBACKEND='Agg'` 后逐个 `python` 运行）；`test_api.py` 为 pytest 式（`.venv\Scripts\python.exe -m pytest tests/test_api.py -v`）
+- 类型检查：项目启用 Pylance/Pyright strict（pyproject `typeCheckingMode = "strict"`）；所有新增代码（含教学示例与测试代码）必须通过 strict 检查，业务代码保持零 `# pyright: ignore`；测试里 mock 用标准写法（如 `typing.cast(Any, MagicMock())`），不要用 `# type: ignore` 绕过
 - 日志：程序入口调用一次 `finance_analysis.utils.logger.setup_logging()`
 - API 启动：`.venv\Scripts\python.exe -m uvicorn finance_analysis.api.app:app --reload`（交互文档 http://127.0.0.1:8000/docs）
 - 数据库：`database/finance.db` 不入库，新环境用 DatabaseLoader 从 `data/*.csv` 重建
