@@ -4,6 +4,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+import pandas as pd
+
 from finance_analysis.database.manager import DatabaseManager
 from finance_analysis.exceptions import DatabaseError
 
@@ -28,7 +30,7 @@ class PortfolioRepository:
         """按 id 查询组合；不存在返回 None"""
         try:
             df = self.db.query_portfolio(portfolio_id)
-        except sqlite3.Error as exc:
+        except (sqlite3.Error, pd.errors.DatabaseError) as exc:
             raise DatabaseError("数据库查询失败") from exc
 
         if df.empty:

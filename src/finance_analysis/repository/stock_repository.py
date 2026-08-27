@@ -29,7 +29,7 @@ class StockRepository:
         """
         try:
             return self.db.query_stock(symbol, start, end)
-        except sqlite3.Error as exc:
+        except (sqlite3.Error, pd.errors.DatabaseError) as exc:
             raise DatabaseError("数据库查询失败") from exc
 
 
@@ -39,5 +39,5 @@ class StockRepository:
         """
         try:
             return self.db.query_symbols()
-        except sqlite3.Error as exc:
+        except (sqlite3.Error, pd.errors.DatabaseError) as exc:
             raise DatabaseError("数据库查询失败") from exc
