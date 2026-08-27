@@ -16,3 +16,7 @@ where = ["src"]
 [tool.pyright]
 typeCheckingMode = "strict"
 stubPath = "typings"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--cov=finance_analysis.services --cov=finance_analysis.repository --cov=finance_analysis.database --cov-report=term-missing"

@@ -39,3 +39,5 @@ output/
 
 # Local private agent context (never commit)
 AGENTS.local.md
+.coverage
+htmlcov/
