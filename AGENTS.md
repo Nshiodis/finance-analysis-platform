@@ -2,8 +2,8 @@
 
 ## 项目简介
 
-金融数据分析学习平台。当前完成到 **Day29：Portfolio API（含持久化）**（`POST /portfolios` + `GET /portfolios/{id}/performance`）。
-下一步 **Day30：测试体系系统化**（完整路线见文末"学习路线规划"）。
+金融数据分析学习平台。当前完成到 **Day30：测试体系系统化**（测试金字塔 + pytest-cov 覆盖率 93%）。
+下一步 **Day31：日志与可观测性**（完整路线见文末"学习路线规划"）。
 
 ## 开始任务前必读
 
@@ -13,7 +13,7 @@
 
 - Python 3.13 + Pandas + Matplotlib + SQLite（标准库 `sqlite3`）
 - FastAPI + Uvicorn（API 服务，`.venv` 已安装）
-- pytest + httpx（接口自动化测试，`.venv` 已安装）
+- pytest + httpx + pytest-cov（单元/集成/接口测试与覆盖率，`.venv` 已安装）
 - 虚拟环境：`.venv`（用 `.venv\Scripts\python.exe` 运行）
 - 包：`finance_analysis`（src 布局，editable install）
 
@@ -66,6 +66,8 @@ src/finance_analysis/
   - 补充（stub 质量审查）：提交 `chore: pin pyright strict config and refine local type stubs`；stub 返回值尽量真实类型（Text/Legend/Line2D/BarContainer/PathCollection…），保留 Any 仅限三类——pandas Index/Series 无法装进 matplotlib ArrayLike 的数据参数、Artist 动态属性 kwargs、`gca()`（真实 Axes.set_major_formatter 参数无注解）；akshare 签名与 1.18.70 对齐；社区 matplotlib-stubs 实测更差（strict 下 20 错），不采用
 - Day29（已完成）：Portfolio API（含持久化）（新增 portfolio 表，weights 存 JSON 列；PortfolioRepository 管 JSON 编解码 + 自增 id；PortfolioService 校验权重（空/负/和≠1 → 422）→ 组装 Portfolio（date_index() 日期对齐）→ PerformanceEvaluator 算绩效；`POST /portfolios`（201）+ `GET /portfolios/{id}/performance`；测试 19 个全绿）
   - 提交：`feat: add portfolio API with persistence`
+- Day30（已完成）：测试体系系统化（测试金字塔落地：单元（Service + mock）×9、集成（Repository + tmp_path 临时库）×9、API ×19，共 37 个全绿；核心层覆盖率 89% → 93%（pytest-cov + pyproject 配置）；测试抓到真 bug：pd.read_sql 把 sqlite3.Error 重包为 pandas.errors.DatabaseError，两个仓库补 except；类型纪律：mock 用 cast(Any, ...) 读取侧收口、assert x is not None 收窄）
+  - 提交：`fix: catch pandas DatabaseError in repositories` / `test: add unit and integration tests with coverage`
 
 ## 约定与注意事项
 
@@ -126,6 +128,14 @@ src/finance_analysis/
 - 校验：空 / 负权重 / 权重和≠1 → `InvalidPortfolioError`(422) fail fast，不裸抛 ValueError
 - 测试：19 个全绿（新增创建 201、绩效字段、404、空权重 422、权重和≠1 422）
 - 提交：`feat: add portfolio API with persistence`
+## Day30（已完成）
+
+- 测试金字塔：单元（Service，mock Repository）→ 集成（Repository，临时 SQLite）→ API（TestClient）；37 个全绿
+- mock 纪律：MagicMock 的 return_value / side_effect / 查账断言（assert_called_once / assert_called_once_with）；cast 用在读取侧（实例属性类型由类声明焊死），用返回 Any 的 fixture 收口
+- 集成测试：tmp_path 临时库（不碰开发库）；`:memory:` 在单元测试里只是占位
+- 覆盖率：pytest-cov + pyproject addopts；核心层 89% → 93%；报告看 TOTAL / Missing
+- 真 bug：pd.read_sql 把 sqlite3.Error 重包为 pandas.errors.DatabaseError（不是 sqlite3.Error 子类），Repository 的 except 需同时捕获
+- 提交：`fix: catch pandas DatabaseError in repositories` / `test: add unit and integration tests with coverage`
 ## 学习路线规划（Day25–Day35）
 
 > 阶段定位：Day1–19 是"我会什么"，Day20–24 是"我怎么把它组织起来"，Day25–35 是"把它做成别人能调用、测试、部署的软件"。
@@ -144,7 +154,7 @@ Router → Service → Repository → Database
 - **Day27 RESTful API 设计**（已完成）：学 REST 资源语义；用 `APIRouter` 按资源拆分路由；v1.0 前统一资源命名为复数 `/stocks/{symbol}`（旧路径可先保留兼容）；补 `GET /stocks` 列表。验收：`/docs` 结构清晰、无重复代码。
 - **Day28 金融分析 API**（已完成）：把 Day17–19 能力暴露成接口：`GET /stocks/{symbol}/risk`（收益/波动/回撤/Sharpe）、`/stocks/{symbol}/indicators?window=20`（MA/RSI/MACD）。验收：每个新接口都有 pytest 覆盖（14 个全绿）。
 - **Day29 Portfolio API（含持久化）**（已完成）：新增 portfolio 表 + `PortfolioRepository` + `PortfolioService`；`POST /portfolios`（请求体 = 权重 dict）、`GET /portfolios/{id}/performance`（组合收益/年化/波动/Sharpe/Benchmark/Excess Return）。验收：组合可入库、可查绩效，接口测试全绿（19 个全绿）。
-- **Day30 测试体系系统化**：测试金字塔——单元（Service，mock Repository）→ 集成（Repository 用临时数据库）→ API（TestClient）；fixture / monkeypatch / mock；引入覆盖率统计。验收：核心层覆盖率 ≥ 70%。
+- **Day30 测试体系系统化**（已完成）：测试金字塔——单元（Service，mock Repository）→ 集成（Repository 用临时数据库）→ API（TestClient）；fixture / monkeypatch / mock；引入覆盖率统计。验收：核心层覆盖率 ≥ 70%（37 全绿，93%）。
 - **Day31 日志与可观测性**：请求日志中间件（method / path / status / 耗时）；分层日志（INFO 查询参数、WARNING 未命中、ERROR 数据库失败）；不记录敏感信息。验收：一条请求在日志里可完整追踪。
 - **Day32 配置与环境管理**：引入 pydantic-settings + `.env`；按 development / testing / production 区分配置；测试用独立临时数据库。验收：改环境变量即可切换环境，代码里无硬编码路径。
 - **Day33 Docker 化**：Dockerfile（多阶段构建）+ docker-compose。目标：`docker compose up` → `/docs` 可访问。验收：新环境一条命令启动。
