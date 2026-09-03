@@ -6,6 +6,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 from finance_analysis.api.dependencies import get_stock_service
+from finance_analysis.api.middleware import log_requests
 from finance_analysis.api.routers import portfolios, stocks
 from finance_analysis.api.schemas import StockResponse
 from finance_analysis.exceptions import AppError
@@ -16,6 +17,7 @@ from finance_analysis.utils.logger import setup_logging
 setup_logging()
 
 app = FastAPI()
+app.middleware("http")(log_requests)
 
 
 @app.exception_handler(AppError)

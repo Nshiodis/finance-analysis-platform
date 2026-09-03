@@ -1,3 +1,4 @@
+import logging
 from datetime import date
 import sqlite3
 from pathlib import Path
@@ -6,6 +7,9 @@ import pandas as pd
 
 from finance_analysis.database.manager import DatabaseManager
 from finance_analysis.exceptions import DatabaseError
+
+
+logger = logging.getLogger(__name__)
 
 
 class StockRepository:
@@ -30,6 +34,7 @@ class StockRepository:
         try:
             return self.db.query_stock(symbol, start, end)
         except (sqlite3.Error, pd.errors.DatabaseError) as exc:
+            logger.error("查询股票 %s 失败：%s", symbol, exc)
             raise DatabaseError("数据库查询失败") from exc
 
 
@@ -40,4 +45,5 @@ class StockRepository:
         try:
             return self.db.query_symbols()
         except (sqlite3.Error, pd.errors.DatabaseError) as exc:
+            logger.error("查询股票列表失败：%s", exc)
             raise DatabaseError("数据库查询失败") from exc

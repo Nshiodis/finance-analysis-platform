@@ -1,3 +1,4 @@
+import logging
 import numpy as np
 from pathlib import Path
 
@@ -8,6 +9,9 @@ from finance_analysis.exceptions import InvalidPortfolioError, PortfolioNotFound
 from finance_analysis.models.portfolio import Portfolio
 from finance_analysis.models.stock import StockData
 from finance_analysis.repository.portfolio_repository import PortfolioRepository
+
+
+logger = logging.getLogger(__name__)
 
 
 class PortfolioService:
@@ -27,6 +31,7 @@ class PortfolioService:
             raise InvalidPortfolioError("权重和必须为 1")
 
         portfolio_id = self.repository.create_portfolio(weights)
+        logger.info("组合已创建：id=%s", portfolio_id)
         return {"id": portfolio_id, "weights": weights}
 
 
@@ -34,6 +39,7 @@ class PortfolioService:
         """查询组合绩效"""
         record = self.repository.get_portfolio(portfolio_id)
         if record is None:
+            logger.warning("组合 %s 未找到", portfolio_id)
             raise PortfolioNotFoundError(f"组合 {portfolio_id} 不存在")
 
         weights = record["weights"]

@@ -1,3 +1,4 @@
+import logging
 import json
 import sqlite3
 from datetime import datetime
@@ -9,6 +10,8 @@ import pandas as pd
 from finance_analysis.database.manager import DatabaseManager
 from finance_analysis.exceptions import DatabaseError
 
+
+logger = logging.getLogger(__name__)
 
 
 class PortfolioRepository:
@@ -24,6 +27,7 @@ class PortfolioRepository:
             created_at = datetime.now().isoformat()
             return self.db.insert_portfolio(weights_json, created_at)
         except sqlite3.Error as exc:
+            logger.error("创建组合失败：%s", exc)
             raise DatabaseError("数据库插入失败") from exc
 
     def get_portfolio(self, portfolio_id: int) -> dict[str, Any] | None:
@@ -31,6 +35,7 @@ class PortfolioRepository:
         try:
             df = self.db.query_portfolio(portfolio_id)
         except (sqlite3.Error, pd.errors.DatabaseError) as exc:
+            logger.error("查询组合 %s 失败：%s", portfolio_id, exc)
             raise DatabaseError("数据库查询失败") from exc
 
         if df.empty:

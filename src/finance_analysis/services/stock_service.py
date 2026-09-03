@@ -1,3 +1,4 @@
+import logging
 from datetime import date
 from pathlib import Path
 from typing import Any
@@ -8,6 +9,9 @@ from finance_analysis.config import DATABASE_PATH
 from finance_analysis.exceptions import StockNotFoundError, StockNoDataError, InvalidDateRangeError
 from finance_analysis.models.stock import StockData
 from finance_analysis.repository.stock_repository import StockRepository
+
+
+logger = logging.getLogger(__name__)
 
 
 class StockService:
@@ -27,14 +31,19 @@ class StockService:
         if start is not None and end is not None and start > end:
             raise InvalidDateRangeError("开始日期不能晚于结束日期")
         
+        logger.info("获取股票 %s: start=%s end=%s", symbol, start, end)
+
         df = self.repository.get_stock(symbol, start, end)
 
         if df.empty:
             if start is None and end is None:
+                logger.warning("股票 %s 未找到", symbol)
                 raise StockNotFoundError(f"股票 {symbol} 不存在")
             full_df = self.repository.get_stock(symbol)
             if full_df.empty:
+                logger.warning("股票 %s 未找到", symbol)
                 raise StockNotFoundError(f"股票 {symbol} 不存在")
+            logger.warning("股票 %s 在指定日期范围内没有数据", symbol)
             raise StockNoDataError(f"股票 {symbol} 在指定日期范围内没有数据")
 
         stock = StockData.from_dataframe(df)

@@ -2,8 +2,8 @@
 
 ## 项目简介
 
-金融数据分析学习平台。当前完成到 **Day30：测试体系系统化**（测试金字塔 + pytest-cov 覆盖率 93%）。
-下一步 **Day31：日志与可观测性**（完整路线见文末"学习路线规划"）。
+金融数据分析学习平台。当前完成到 **Day31：日志与可观测性**（请求日志中间件 + request_id 全链路追踪 + 分层日志）。
+下一步 **Day32：配置与环境管理**（完整路线见文末"学习路线规划"）。
 
 ## 开始任务前必读
 
@@ -23,7 +23,7 @@
 src/finance_analysis/
 ├── config.py           # 集中配置：PROJECT_ROOT / DATA_PATH / OUTPUT_PATH / DATABASE_PATH / LOG_PATH / LOG_LEVEL
 ├── exceptions.py       # 异常体系（AppError 基类 + 4 个子类，携带 status_code / code）
-├── api/                # FastAPI 应用（app.py：include_router + 统一异常处理器 + 旧路径 deprecated；routers/stocks.py / portfolios.py：APIRouter；dependencies.py：依赖注入；schemas.py：响应模型）
+├── api/                # FastAPI 应用（app.py：include_router + 统一异常处理器 + 旧路径 deprecated；middleware.py：请求日志中间件；routers/stocks.py / portfolios.py：APIRouter；dependencies.py：依赖注入；schemas.py：响应模型）
 ├── services/           # StockService / PortfolioService（业务编排）
 ├── models/             # StockData / StockPool / Portfolio（业务对象）
 ├── repository/         # StockRepository / PortfolioRepository（数据访问层，业务层不直接碰 SQLite）
@@ -68,6 +68,8 @@ src/finance_analysis/
   - 提交：`feat: add portfolio API with persistence`
 - Day30（已完成）：测试体系系统化（测试金字塔落地：单元（Service + mock）×9、集成（Repository + tmp_path 临时库）×9、API ×19，共 37 个全绿；核心层覆盖率 89% → 93%（pytest-cov + pyproject 配置）；测试抓到真 bug：pd.read_sql 把 sqlite3.Error 重包为 pandas.errors.DatabaseError，两个仓库补 except；类型纪律：mock 用 cast(Any, ...) 读取侧收口、assert x is not None 收窄）
   - 提交：`fix: catch pandas DatabaseError in repositories` / `test: add unit and integration tests with coverage`
+- Day31（已完成）：日志与可观测性（新增 `api/middleware.py` 请求日志中间件记录 method/path(含 query)/status/耗时；`utils/logger.py` 新增 `request_id_var`（ContextVar，default "-"）与 `RequestIdFormatter`，日志格式带 `[request_id]`，同请求链路自动共享同一 id；分层日志：Service INFO 查询参数 / WARNING 未命中、Repository ERROR 记录数据库根因；不记录敏感信息：中间件不碰 body/header，组合只记 id 不记 weights；测试新增 10 个 → 47 全绿、覆盖率 93%、pyright strict 0 错误）
+  - 提交：`feat: add request logging middleware with request_id tracing`
 
 ## 约定与注意事项
 
@@ -136,6 +138,16 @@ src/finance_analysis/
 - 覆盖率：pytest-cov + pyproject addopts；核心层 89% → 93%；报告看 TOTAL / Missing
 - 真 bug：pd.read_sql 把 sqlite3.Error 重包为 pandas.errors.DatabaseError（不是 sqlite3.Error 子类），Repository 的 except 需同时捕获
 - 提交：`fix: catch pandas DatabaseError in repositories` / `test: add unit and integration tests with coverage`
+## Day31（已完成）
+
+- 请求日志中间件：新增 `api/middleware.py` 的 `log_requests`（`@app.middleware("http")` 一行挂载），记录 method / path(含查询参数) / status / 耗时；用 `uuid.uuid4().hex[:8]` 生成 request_id
+- request_id 链路：`utils/logger.py` 定义 `request_id_var: ContextVar[str]`（default "-"）+ `RequestIdFormatter`（format 时先把当前 id 挂到 record 再 super().format）；中间件/Service/Repository 的日志自动共享同一 id，不用逐层传参
+- 踩坑 1（顺序）：`reset(token)` 放 finally 没错，但"请求完成"日志若写在 finally 之后，打出来时 id 已被擦掉 → 显示 "-"；必须把成功日志与 return 放 try 内，finally 在 return 时才执行
+- 踩坑 2（caplog）：caplog 用自己的默认 formatter，不经过 RequestIdFormatter，别直接断言 `record.request_id`；正确姿势 = 单测 RequestIdFormatter + `caplog.handler.setFormatter(RequestIdFormatter(...))`
+- 分层日志纪律：INFO 查询参数、WARNING 未命中放 Service；ERROR 数据库根因在 Repository 包装前记 `logger.error(..., exc)`——响应 message 不暴露细节，日志留根因
+- 敏感信息：中间件只记 method/path/query，不碰 body/header；组合创建只记 id 不记 weights；日志一律 `%s` 占位 + 参数（惰性求值），不用 f-string
+- 测试：新增 10 个（中间件日志 6 + formatter 单测 1 + 跨层 request_id 1 + Repository ERROR 2）→ 47 全绿，覆盖率 93%，pyright strict 0 错误
+- 提交：`feat: add request logging middleware with request_id tracing`
 ## 学习路线规划（Day25–Day35）
 
 > 阶段定位：Day1–19 是"我会什么"，Day20–24 是"我怎么把它组织起来"，Day25–35 是"把它做成别人能调用、测试、部署的软件"。
@@ -155,7 +167,7 @@ Router → Service → Repository → Database
 - **Day28 金融分析 API**（已完成）：把 Day17–19 能力暴露成接口：`GET /stocks/{symbol}/risk`（收益/波动/回撤/Sharpe）、`/stocks/{symbol}/indicators?window=20`（MA/RSI/MACD）。验收：每个新接口都有 pytest 覆盖（14 个全绿）。
 - **Day29 Portfolio API（含持久化）**（已完成）：新增 portfolio 表 + `PortfolioRepository` + `PortfolioService`；`POST /portfolios`（请求体 = 权重 dict）、`GET /portfolios/{id}/performance`（组合收益/年化/波动/Sharpe/Benchmark/Excess Return）。验收：组合可入库、可查绩效，接口测试全绿（19 个全绿）。
 - **Day30 测试体系系统化**（已完成）：测试金字塔——单元（Service，mock Repository）→ 集成（Repository 用临时数据库）→ API（TestClient）；fixture / monkeypatch / mock；引入覆盖率统计。验收：核心层覆盖率 ≥ 70%（37 全绿，93%）。
-- **Day31 日志与可观测性**：请求日志中间件（method / path / status / 耗时）；分层日志（INFO 查询参数、WARNING 未命中、ERROR 数据库失败）；不记录敏感信息。验收：一条请求在日志里可完整追踪。
+- **Day31 日志与可观测性**（已完成）：请求日志中间件（method / path / status / 耗时）；分层日志（INFO 查询参数、WARNING 未命中、ERROR 数据库失败）；不记录敏感信息。验收：一条请求在日志里可完整追踪。
 - **Day32 配置与环境管理**：引入 pydantic-settings + `.env`；按 development / testing / production 区分配置；测试用独立临时数据库。验收：改环境变量即可切换环境，代码里无硬编码路径。
 - **Day33 Docker 化**：Dockerfile（多阶段构建）+ docker-compose。目标：`docker compose up` → `/docs` 可访问。验收：新环境一条命令启动。
 - **Day34 项目文档**：README.md（项目是什么 / 如何运行 / 如何测试）+ ARCHITECTURE.md（分层与数据流图）+ API.md（接口清单与示例）。验收：照着文档能在新环境跑起来。

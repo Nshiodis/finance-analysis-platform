@@ -1,8 +1,18 @@
 import logging
+from contextvars import ContextVar
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
 from finance_analysis.config import LOG_PATH, LOG_LEVEL
+
+
+request_id_var: ContextVar[str] = ContextVar("request_id", default="-")
+
+
+class RequestIdFormatter(logging.Formatter):
+    def format(self, record: logging.LogRecord) -> str:
+        record.request_id = request_id_var.get()
+        return super().format(record)
 
 
 def setup_logging() -> None:
@@ -11,9 +21,9 @@ def setup_logging() -> None:
     log_path = Path(LOG_PATH)
     log_path.parent.mkdir(parents=True, exist_ok=True)
 
-    # 1. 日志格式：时间戳 [级别] 模块名: 消息
-    formatter = logging.Formatter(
-        "%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    # 1. 日志格式：时间戳 [级别] [请求ID] 模块名: 消息
+    formatter = RequestIdFormatter(
+        "%(asctime)s [%(levelname)s] [%(request_id)s] %(name)s: %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
     )
 
