@@ -1,9 +1,8 @@
 import logging
 from contextvars import ContextVar
 from logging.handlers import RotatingFileHandler
-from pathlib import Path
 
-from finance_analysis.config import LOG_PATH, LOG_LEVEL
+from finance_analysis.config import settings
 
 
 request_id_var: ContextVar[str] = ContextVar("request_id", default="-")
@@ -18,7 +17,7 @@ class RequestIdFormatter(logging.Formatter):
 def setup_logging() -> None:
     """配置全局日志：控制台 + 文件（轮转）"""
 
-    log_path = Path(LOG_PATH)
+    log_path = settings.log_path
     log_path.parent.mkdir(parents=True, exist_ok=True)
 
     # 1. 日志格式：时间戳 [级别] [请求ID] 模块名: 消息
@@ -42,6 +41,6 @@ def setup_logging() -> None:
 
     # 4. 一次性应用到根 logger
     logging.basicConfig(
-        level=getattr(logging, LOG_LEVEL),
+        level=getattr(logging, settings.log_level),
         handlers=[console_handler, file_handler],
     )

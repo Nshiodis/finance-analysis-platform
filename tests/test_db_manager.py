@@ -1,12 +1,12 @@
 import pandas as pd
-from finance_analysis.config import DATABASE_PATH
+from finance_analysis.config import settings
 from finance_analysis.database.manager import DatabaseManager
 
 
 # 创建数据库对象
 
 db = DatabaseManager(
-    DATABASE_PATH
+    settings.database_path
 )
 
 # 模拟股票数据

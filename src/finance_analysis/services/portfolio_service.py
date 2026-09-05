@@ -4,7 +4,7 @@ from pathlib import Path
 
 from finance_analysis.analysis.benchmark import Benchmark
 from finance_analysis.analysis.evaluation import PerformanceEvaluator
-from finance_analysis.config import DATABASE_PATH
+from finance_analysis.config import settings
 from finance_analysis.exceptions import InvalidPortfolioError, PortfolioNotFoundError
 from finance_analysis.models.portfolio import Portfolio
 from finance_analysis.models.stock import StockData
@@ -17,7 +17,9 @@ logger = logging.getLogger(__name__)
 class PortfolioService:
     """组合业务服务：校验 → 组装 → 算绩效"""
 
-    def __init__(self, db_path: str | Path = DATABASE_PATH):
+    def __init__(self, db_path: str | Path | None = None):
+        if db_path is None:
+            db_path = settings.database_path
         self.repository = PortfolioRepository(db_path)
 
 

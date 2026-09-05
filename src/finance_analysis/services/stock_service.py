@@ -5,7 +5,7 @@ from typing import Any
 
 import pandas as pd
 
-from finance_analysis.config import DATABASE_PATH
+from finance_analysis.config import settings
 from finance_analysis.exceptions import StockNotFoundError, StockNoDataError, InvalidDateRangeError
 from finance_analysis.models.stock import StockData
 from finance_analysis.repository.stock_repository import StockRepository
@@ -17,7 +17,9 @@ logger = logging.getLogger(__name__)
 class StockService:
     """股票业务服务：负责取数、判断、计算指标的编排"""
 
-    def __init__(self, db_path: str | Path = DATABASE_PATH):
+    def __init__(self, db_path: str | Path | None = None):
+        if db_path is None:
+            db_path = settings.database_path
         self.repository = StockRepository(db_path)
 
 

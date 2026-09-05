@@ -8,7 +8,7 @@ from finance_analysis.repository.stock_repository import StockRepository
 import finance_analysis.utils.utils as utils
 import matplotlib.pyplot as plt
 import logging
-from finance_analysis.config import DATABASE_PATH
+from finance_analysis.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +48,7 @@ class StockData:
     ) -> "StockData":
 
         repo = StockRepository(
-            DATABASE_PATH
+            settings.database_path
         )
 
         df = repo.get_stock(symbol, start, end)

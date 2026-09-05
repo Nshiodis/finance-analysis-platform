@@ -2,8 +2,8 @@
 
 ## 项目简介
 
-金融数据分析学习平台。当前完成到 **Day31：日志与可观测性**（请求日志中间件 + request_id 全链路追踪 + 分层日志）。
-下一步 **Day32：配置与环境管理**（完整路线见文末"学习路线规划"）。
+金融数据分析学习平台。当前完成到 **Day32：配置与环境管理**（pydantic-settings + .env + 环境切换 + 测试独立临时库）。
+下一步 **Day33：Docker 化**（完整路线见文末"学习路线规划"）。
 
 ## 开始任务前必读
 
@@ -21,7 +21,7 @@
 
 ```
 src/finance_analysis/
-├── config.py           # 集中配置：PROJECT_ROOT / DATA_PATH / OUTPUT_PATH / DATABASE_PATH / LOG_PATH / LOG_LEVEL
+├── config.py           # 集中配置：Settings(BaseSettings) + settings 单例（字段默认值可被 .env / FINANCE_* 环境变量覆盖）
 ├── exceptions.py       # 异常体系（AppError 基类 + 4 个子类，携带 status_code / code）
 ├── api/                # FastAPI 应用（app.py：include_router + 统一异常处理器 + 旧路径 deprecated；middleware.py：请求日志中间件；routers/stocks.py / portfolios.py：APIRouter；dependencies.py：依赖注入；schemas.py：响应模型）
 ├── services/           # StockService / PortfolioService（业务编排）
@@ -70,6 +70,8 @@ src/finance_analysis/
   - 提交：`fix: catch pandas DatabaseError in repositories` / `test: add unit and integration tests with coverage`
 - Day31（已完成）：日志与可观测性（新增 `api/middleware.py` 请求日志中间件记录 method/path(含 query)/status/耗时；`utils/logger.py` 新增 `request_id_var`（ContextVar，default "-"）与 `RequestIdFormatter`，日志格式带 `[request_id]`，同请求链路自动共享同一 id；分层日志：Service INFO 查询参数 / WARNING 未命中、Repository ERROR 记录数据库根因；不记录敏感信息：中间件不碰 body/header，组合只记 id 不记 weights；测试新增 10 个 → 47 全绿、覆盖率 93%、pyright strict 0 错误）
   - 提交：`feat: add request logging middleware with request_id tracing`
+- Day32（已完成）：配置与环境管理（引入 pydantic-settings：config.py 改为 `Settings(BaseSettings)` + `settings` 单例；字段 = 类型 + 默认值，可被 .env / `FINANCE_*` 环境变量覆盖；`env_prefix="FINANCE_"` 防裸系统变量劫持；`environment: Literal[development/testing/production]`；收敛全部调用方改走 settings 并删除兼容别名；service 构造改 `db_path=None` + 运行时读 settings（绕开默认参数 import 时求值的陷阱）；新增 .env（gitignored）+ .env.example 模板；测试隔离：`tests/conftest.py` session autouse fixture 用真实 CSV 灌独立临时库并指向 `settings.database_path`，API/日志测试不再碰开发库；`test_config.py` ×4（默认/覆盖/非法环境 fail fast/前缀隔离）；51 全绿、覆盖率 93%、pyright strict 0）
+  - 提交：`feat: add pydantic-settings config and isolated test database`
 
 ## 约定与注意事项
 
@@ -148,6 +150,19 @@ src/finance_analysis/
 - 敏感信息：中间件只记 method/path/query，不碰 body/header；组合创建只记 id 不记 weights；日志一律 `%s` 占位 + 参数（惰性求值），不用 f-string
 - 测试：新增 10 个（中间件日志 6 + formatter 单测 1 + 跨层 request_id 1 + Repository ERROR 2）→ 47 全绿，覆盖率 93%，pyright strict 0 错误
 - 提交：`feat: add request logging middleware with request_id tracing`
+## Day32（已完成）
+
+- 配置类化：config.py 从模块级常量改为 `Settings(BaseSettings)` + `settings` 单例；`model_config = SettingsConfigDict(env_file=".env", env_prefix="FINANCE_", extra="ignore")`
+- 取值优先级：代码默认值 < .env 文件 < 真实环境变量 < 显式传参；`.env` 相对当前工作目录读取（测试用 chdir 到空目录隔离）
+- 防劫持：`env_prefix="FINANCE_"`——裸的 `DATABASE_PATH` 等系统变量无法覆盖配置，用 `test_prefix_protects_against_bare_env_var` 锁死
+- 环境：`environment: Literal["development", "testing", "production"]` 记录身份；非法值构造即报错（fail fast）；环境差异由各机器自己的 .env 提供，代码不猜环境
+- 收敛调用方：logger / service / model / utils 全部改走 `settings.xxx`，兼容别名删除；`rg` 全仓库确认无裸路径常量
+- 默认参数陷阱：`def __init__(db_path=DATABASE_PATH)` 在 import 时把默认值焊死 → 改为 `db_path: str | Path | None = None` + 运行时读 settings（也是测试可注入临时库的前提）
+- 测试隔离：`tests/conftest.py` session autouse fixture 用真实 CSV 灌独立临时库并改 `settings.database_path`（yield 后恢复）；API/日志测试从此不碰开发库；DatabaseLoader 覆盖率顺带升到 100%
+- 配置测试：`test_config.py` ×4——默认值 / 环境变量覆盖 / 非法环境 ValidationError / env_prefix 隔离裸变量；`clean_env` fixture = 删 FINANCE_* 变量 + chdir 空目录（测试只依赖自己布置的考场）
+- 坑：`from pydantic import BaseSettings` 是 pydantic v1 写法，v2 要从 `pydantic_settings` 导入（报错信息会明说 moved）；`Settings(_env_file=None)` 运行时可用但 pyright 按"字段生成 init"不认 → 改用 monkeypatch.chdir 隔离 .env；带 yield 的 fixture 返回注解应为 `Iterator[None]`
+- 测试：47 → 51 全绿（+4 配置测试），覆盖率 93%，pyright strict 0 错误
+- 提交：`feat: add pydantic-settings config and isolated test database`
 ## 学习路线规划（Day25–Day35）
 
 > 阶段定位：Day1–19 是"我会什么"，Day20–24 是"我怎么把它组织起来"，Day25–35 是"把它做成别人能调用、测试、部署的软件"。
@@ -168,7 +183,7 @@ Router → Service → Repository → Database
 - **Day29 Portfolio API（含持久化）**（已完成）：新增 portfolio 表 + `PortfolioRepository` + `PortfolioService`；`POST /portfolios`（请求体 = 权重 dict）、`GET /portfolios/{id}/performance`（组合收益/年化/波动/Sharpe/Benchmark/Excess Return）。验收：组合可入库、可查绩效，接口测试全绿（19 个全绿）。
 - **Day30 测试体系系统化**（已完成）：测试金字塔——单元（Service，mock Repository）→ 集成（Repository 用临时数据库）→ API（TestClient）；fixture / monkeypatch / mock；引入覆盖率统计。验收：核心层覆盖率 ≥ 70%（37 全绿，93%）。
 - **Day31 日志与可观测性**（已完成）：请求日志中间件（method / path / status / 耗时）；分层日志（INFO 查询参数、WARNING 未命中、ERROR 数据库失败）；不记录敏感信息。验收：一条请求在日志里可完整追踪。
-- **Day32 配置与环境管理**：引入 pydantic-settings + `.env`；按 development / testing / production 区分配置；测试用独立临时数据库。验收：改环境变量即可切换环境，代码里无硬编码路径。
+- **Day32 配置与环境管理**（已完成）：引入 pydantic-settings + `.env`；按 development / testing / production 区分配置；测试用独立临时数据库。验收：改环境变量即可切换环境，代码里无硬编码路径。
 - **Day33 Docker 化**：Dockerfile（多阶段构建）+ docker-compose。目标：`docker compose up` → `/docs` 可访问。验收：新环境一条命令启动。
 - **Day34 项目文档**：README.md（项目是什么 / 如何运行 / 如何测试）+ ARCHITECTURE.md（分层与数据流图）+ API.md（接口清单与示例）。验收：照着文档能在新环境跑起来。
 - **Day35 工程 Review 与 v1.0**：代码走查（重复 / 命名 / 注解 / 异常 / 日志 / 测试 / 配置 / 文档）→ 全量 pytest → 打 tag `v1.0.0`。验收：checklist 全过、Git clean。

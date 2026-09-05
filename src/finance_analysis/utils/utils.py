@@ -2,7 +2,7 @@ import pandas as pd
 from matplotlib.figure import Figure
 
 import logging
-from finance_analysis.config import PROJECT_ROOT, OUTPUT_PATH
+from finance_analysis.config import PROJECT_ROOT, settings
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +36,7 @@ def save_csv(
     :param file_name: 文件名
     :param index: 是否包含索引(默认True)
     """
-    output_path = OUTPUT_PATH
+    output_path = settings.output_path
     df.to_csv(
         output_path / file_name,
         index=index,
@@ -53,7 +53,7 @@ def save_plot(
     :param fig: matplotlib Figure
     :param file_name: 文件名
     """
-    output_path = OUTPUT_PATH
+    output_path = settings.output_path
     fig.savefig(
         output_path / file_name,
         dpi=300,
