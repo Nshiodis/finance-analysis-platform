@@ -5,7 +5,11 @@ WORKDIR /app
 
 COPY requirements.txt .
 
-RUN python -m venv /opt/venv && /opt/venv/bin/pip install --no-cache-dir -r requirements.txt
+# --mount=type=cache：BuildKit 缓存挂载，pip 下载的 wheel 存缓存里、不进镜像层，
+# 依赖变动重装时直接复用已下载的包（所以这里不能再加 --no-cache-dir，加了 pip 就不写缓存）
+RUN --mount=type=cache,target=/root/.cache/pip \
+    python -m venv /opt/venv && \
+    /opt/venv/bin/pip install -i https://pypi.tuna.tsinghua.edu.cn/simple -r requirements.txt
 
 
 # ---------- 阶段 2：final（只放运行时需要的东西）----------
