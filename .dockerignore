@@ -1,0 +1,17 @@
+.venv/
+.git/
+.env
+output/
+database/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+.vscode/
+.idea/
+tests/
+AGENTS.md
+AGENTS.local.md
+*.md
+typings/
