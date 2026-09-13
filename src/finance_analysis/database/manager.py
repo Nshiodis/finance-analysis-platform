@@ -377,3 +377,33 @@ class DatabaseManager:
         )
         conn.close()
         return df
+
+
+    def create_stock_price_table(self, table_name: str = "stock_price") -> None:
+        """创建股票行情表（显式声明表结构，不依赖读到的第一个 CSV）"""
+
+        conn = self.connect()
+        cursor = conn.cursor()
+
+        cursor.execute(
+            f"""
+            CREATE TABLE IF NOT EXISTS "{table_name}"
+            (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                date TEXT NOT NULL,
+                symbol TEXT NOT NULL,
+                open REAL,
+                high REAL,
+                low REAL,
+                close REAL,
+                volume INTEGER,
+                amount TEXT,
+                outstanding_share TEXT,
+                turnover TEXT,
+                UNIQUE(symbol, date)
+            )
+            """
+        )
+
+        conn.commit()
+        conn.close()
