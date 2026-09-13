@@ -2,8 +2,8 @@
 
 ## 项目简介
 
-金融数据分析学习平台。当前完成到 **Day32：配置与环境管理**（pydantic-settings + .env + 环境切换 + 测试独立临时库）。
-下一步 **Day33：Docker 化**（完整路线见文末"学习路线规划"）。
+金融数据分析学习平台。当前完成到 **Day33：Docker 化**（多阶段 Dockerfile + docker-compose + 数据卷持久化 + 容器启动自动灌库）。
+下一步 **Day34：项目文档**（完整路线见文末"学习路线规划"）。
 
 ## 开始任务前必读
 
@@ -16,6 +16,7 @@
 - pytest + httpx + pytest-cov（单元/集成/接口测试与覆盖率，`.venv` 已安装）
 - 虚拟环境：`.venv`（用 `.venv\Scripts\python.exe` 运行）
 - 包：`finance_analysis`（src 布局，editable install）
+- 容器：Docker（本机是 Rancher Desktop + Moby 引擎）；镜像 `finance-analysis:dev`，数据卷 `finance-data`
 
 ## 当前结构
 
@@ -32,6 +33,11 @@ src/finance_analysis/
 ├── data/               # download_stock.py
 ├── utils/              # logger.py（setup_logging）/ utils.py（load_csv / save_csv / save_plot）
 └── visualization/      # 绘图（函数内部有 plt.show()，自动化测试需 MPLBACKEND=Agg）
+
+Dockerfile              # 两阶段构建（builder 装依赖 → final 只带 /opt/venv + 源码）
+docker-compose.yml      # api 服务：端口映射 / .env / finance-data 数据卷 / healthcheck
+.dockerignore           # 构建上下文瘦身（排除 .venv/.git/.env/database/tests 等）
+docker/entrypoint.sh    # 容器入口：先 init_db 灌库，再 exec uvicorn
 ```
 
 ## 进度记录
@@ -72,6 +78,8 @@ src/finance_analysis/
   - 提交：`feat: add request logging middleware with request_id tracing`
 - Day32（已完成）：配置与环境管理（引入 pydantic-settings：config.py 改为 `Settings(BaseSettings)` + `settings` 单例；字段 = 类型 + 默认值，可被 .env / `FINANCE_*` 环境变量覆盖；`env_prefix="FINANCE_"` 防裸系统变量劫持；`environment: Literal[development/testing/production]`；收敛全部调用方改走 settings 并删除兼容别名；service 构造改 `db_path=None` + 运行时读 settings（绕开默认参数 import 时求值的陷阱）；新增 .env（gitignored）+ .env.example 模板；测试隔离：`tests/conftest.py` session autouse fixture 用真实 CSV 灌独立临时库并指向 `settings.database_path`，API/日志测试不再碰开发库；`test_config.py` ×4（默认/覆盖/非法环境 fail fast/前缀隔离）；51 全绿、覆盖率 93%、pyright strict 0）
   - 提交：`feat: add pydantic-settings config and isolated test database`
+- Day33（已完成）：Docker 化（多阶段 Dockerfile；.dockerignore；entrypoint 先 init_db 灌库再 exec uvicorn；docker-compose 管端口 / .env / finance-data 数据卷 / healthcheck；create_stock_price_table 显式建表修掉"表结构依赖第一个 CSV"的真 bug；pip 缓存挂载 + 清华源把依赖安装从 220s 压到 28s；53 全绿、覆盖率 93%、pyright strict 0）
+  - 提交：`fix: create stock_price table explicitly instead of inferring from first CSV` / `build: containerize the API with multi-stage Dockerfile and compose` / `test: lock stock_price schema and init_db idempotency` / `build: cache pip wheels and use a domestic PyPI mirror`
 
 ## 约定与注意事项
 
@@ -80,6 +88,8 @@ src/finance_analysis/
 - 日志：程序入口调用一次 `finance_analysis.utils.logger.setup_logging()`
 - API 启动：`.venv\Scripts\python.exe -m uvicorn finance_analysis.api.app:app --reload`（交互文档 http://127.0.0.1:8000/docs）
 - 数据库：`database/finance.db` 不入库，新环境用 DatabaseLoader 从 `data/*.csv` 重建
+- 容器启动（本机）：`wsl -d rancher-desktop -u root -- sh -c "cd /mnt/d/03_Dev/Develop/Projects/finance-analysis-platform && docker compose up -d --build"`；验证 `curl.exe http://127.0.0.1:8000/docs`。Docker Desktop 的 Windows↔WSL 桥在本机坏了，所以 docker 命令一律进 rancher-desktop 虚拟机执行
+- CLI 类型检查：`.venv\Scripts\python.exe -m pyright --pythonpath .venv\Scripts\python.exe src tests`（不加 `--pythonpath` 时 pyright 解析不到三方包，会报成百上千条假错误；`examples/` 是历史遗留目录，不在检查范围）
 - 输出产物（`output/`、`*.png`、`*.log`）不入库（.gitignore 已配置）
 - 笔记要求：每天写 Obsidian 笔记（日志 + 主题）时必须包含当天知识点，尤其要收录用户提问过的问题与踩过的坑（含结论），不要只写"做了什么"
 
@@ -163,6 +173,23 @@ src/finance_analysis/
 - 坑：`from pydantic import BaseSettings` 是 pydantic v1 写法，v2 要从 `pydantic_settings` 导入（报错信息会明说 moved）；`Settings(_env_file=None)` 运行时可用但 pyright 按"字段生成 init"不认 → 改用 monkeypatch.chdir 隔离 .env；带 yield 的 fixture 返回注解应为 `Iterator[None]`
 - 测试：47 → 51 全绿（+4 配置测试），覆盖率 93%，pyright strict 0 错误
 - 提交：`feat: add pydantic-settings config and isolated test database`
+## Day33（已完成）
+
+- 镜像 vs 容器：镜像是只读模板（分层，每层是一条构建指令的快照）；容器 = 镜像 + 一层可写层；删容器不动镜像
+- Dockerfile：FROM 定基础镜像；单独 COPY requirements.txt（依赖不常变、代码常变 → 让依赖层缓存命中）；两阶段构建 = builder 里装依赖 → final 只带 /opt/venv + 源码
+- 实测结论：纯 wheel 项目做多阶段"不会变小"（单阶段 572MB/132MB → 多阶段 589MB/136MB），venv 自带的 pip/setuptools 抵消了收益；多阶段的价值在需要编译工具链的场景
+- docker-compose.yml：把「构建 + 端口映射 + env_file + 数据卷 + healthcheck」写成声明式配置，一条 `docker compose up -d --build` 起服务
+- 端口映射 `8000:8000` = 宿主机端口:容器端口；容器里的 uvicorn 必须监听 0.0.0.0，绑 127.0.0.1 的话宿主机转发不进去
+- 数据卷：`finance-data:/app/database` 把 SQLite 文件放在卷里，`compose down` 再 `up` 数据还在（id=1 的组合重启后仍能查到绩效）
+- entrypoint.sh：`#!/bin/sh` 是 shebang（告诉系统用哪个解释器执行这个文件）；`set -e` = 任一条命令失败立刻退出（否则灌库失败还会继续把服务启起来）；先 `python -m finance_analysis.database.init_db` 再 `exec uvicorn ...`——exec 用 uvicorn 替换掉 shell 进程，让 uvicorn 成为 PID 1 才能正确接收 `docker stop` 的信号
+- 幂等：entrypoint 每次容器启动都会跑 init_db，所以建表用 `CREATE TABLE IF NOT EXISTS`、写入用 `INSERT OR IGNORE`（靠 UNIQUE(symbol,date) 去重），重复启动既不报错也不灌重复数据
+- 真 bug（今天最值钱的一条）：容器灌库报 `sqlite3.OperationalError: table stock_price has no column named outstanding_share`。根因 = 旧逻辑"拿读到的第一个 CSV 建表"，而 `data/000300.csv` 只有 7 列（没有 outstanding_share/turnover），另外三个 CSV 有 9 列，`init_database()` 按文件名排序恰好先读到 000300.csv → 表缺列。本机一直没炸，是因为 `tests/conftest.py` 只灌 600519.csv / 000858.csv（都是 9 列）——典型的"依赖巧合"
+- 修复：`DatabaseManager.create_stock_price_table()` 显式声明 11 列 + UNIQUE(symbol,date)，表结构由代码定义、不再由 CSV 顺序决定；回归测试 `tests/test_init_db.py` 锁死「000300 先灌也不缺列」+「init_db 跑两次不重复」
+- 依赖层提速：pip 装依赖 220s → 28s，主要靠清华源（`-i https://pypi.tuna.tsinghua.edu.cn/simple`）；再加 `RUN --mount=type=cache,target=/root/.cache/pip` 让 wheel 留在 BuildKit 缓存里、不进镜像层（实测重装时每个包都是 `Using cached`）。注意：加了缓存挂载就不能再带 `--no-cache-dir`，否则 pip 根本不写缓存
+- 反面对照：`docker build --network=none` 依然失败——pip 即使有 wheel 缓存也要访问索引才能解析版本，所以"缓存挂载" ≠ "离线构建"
+- 坑：容器默认走 UTC，日志时间比本地少 8 小时（要让日志显示本地时间得给容器设 TZ）
+- 测试：51 → 53 全绿（+2 个 init_db 回归测试），覆盖率 93%，pyright strict 0 错误
+- 提交：`fix: create stock_price table explicitly instead of inferring from first CSV` / `build: containerize the API with multi-stage Dockerfile and compose` / `test: lock stock_price schema and init_db idempotency` / `build: cache pip wheels and use a domestic PyPI mirror`
 ## 学习路线规划（Day25–Day35）
 
 > 阶段定位：Day1–19 是"我会什么"，Day20–24 是"我怎么把它组织起来"，Day25–35 是"把它做成别人能调用、测试、部署的软件"。
@@ -184,7 +211,7 @@ Router → Service → Repository → Database
 - **Day30 测试体系系统化**（已完成）：测试金字塔——单元（Service，mock Repository）→ 集成（Repository 用临时数据库）→ API（TestClient）；fixture / monkeypatch / mock；引入覆盖率统计。验收：核心层覆盖率 ≥ 70%（37 全绿，93%）。
 - **Day31 日志与可观测性**（已完成）：请求日志中间件（method / path / status / 耗时）；分层日志（INFO 查询参数、WARNING 未命中、ERROR 数据库失败）；不记录敏感信息。验收：一条请求在日志里可完整追踪。
 - **Day32 配置与环境管理**（已完成）：引入 pydantic-settings + `.env`；按 development / testing / production 区分配置；测试用独立临时数据库。验收：改环境变量即可切换环境，代码里无硬编码路径。
-- **Day33 Docker 化**：Dockerfile（多阶段构建）+ docker-compose。目标：`docker compose up` → `/docs` 可访问。验收：新环境一条命令启动。
+- **Day33 Docker 化**（已完成）：Dockerfile（多阶段构建）+ docker-compose。目标：`docker compose up` → `/docs` 可访问。验收：新环境一条命令启动。
 - **Day34 项目文档**：README.md（项目是什么 / 如何运行 / 如何测试）+ ARCHITECTURE.md（分层与数据流图）+ API.md（接口清单与示例）。验收：照着文档能在新环境跑起来。
 - **Day35 工程 Review 与 v1.0**：代码走查（重复 / 命名 / 注解 / 异常 / 日志 / 测试 / 配置 / 文档）→ 全量 pytest → 打 tag `v1.0.0`。验收：checklist 全过、Git clean。
 
