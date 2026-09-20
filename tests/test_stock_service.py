@@ -60,6 +60,17 @@ def test_get_stock_metrics_stock_not_found(service: StockService, mock_repo: Any
         service.get_stock_metrics("999999")
 
 
+def test_get_stock_metrics_not_found_with_date_range(
+    service: StockService, mock_repo: Any
+) -> None:
+    """带了日期区间、但全量也空 → 依然判"股票不存在"（不是"区间无数据"）"""
+    mock_repo.get_stock.return_value = pd.DataFrame()
+    with pytest.raises(StockNotFoundError):
+        service.get_stock_metrics(
+            "999999", start=date(2024, 1, 1), end=date(2024, 12, 31)
+        )
+
+
 def test_get_stock_metrics_no_data_in_range(service: StockService, mock_repo: Any) -> None:
     """区间空、全量有 → 区间无数据（side_effect 依次返回）"""
     mock_repo.get_stock.side_effect = [pd.DataFrame(), make_stock_df()]

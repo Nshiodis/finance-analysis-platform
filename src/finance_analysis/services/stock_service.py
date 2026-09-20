@@ -62,18 +62,24 @@ class StockService:
         """获取股票数据"""
         stock = self._get_stock_data(symbol, start, end)
 
-        stock.calculate_return()
-
         return {
             "symbol": symbol,
             "rows": len(stock.df),
             "latest_close": float(stock.df["close"].iloc[-1]),
+            **self._risk_metrics(stock),
+        }
+
+    @staticmethod
+    def _risk_metrics(stock: StockData) -> dict[str, float]:
+        """风险四件套：行情接口与风险接口共用这一份组装逻辑"""
+        stock.calculate_return()
+
+        return {
             "total_return": float(stock.calculate_total_return()),
             "volatility": float(stock.calculate_volatility()),
             "sharpe": float(stock.calculate_sharpe_ratio()),
-            "max_drawdown": float(stock.calculate_max_drawdown())
+            "max_drawdown": float(stock.calculate_max_drawdown()),
         }
-
 
     def list_stocks(self) -> list[str]:
         """获取所有股票代码"""
@@ -89,15 +95,10 @@ class StockService:
         """获取股票风险指标"""
         stock = self._get_stock_data(symbol, start, end)
 
-        stock.calculate_return()
-
         return {
             "symbol": symbol,
             "rows": len(stock.df),
-            "total_return": float(stock.calculate_total_return()),
-            "volatility": float(stock.calculate_volatility()),
-            "sharpe": float(stock.calculate_sharpe_ratio()),
-            "max_drawdown": float(stock.calculate_max_drawdown())
+            **self._risk_metrics(stock),
         }
 
 

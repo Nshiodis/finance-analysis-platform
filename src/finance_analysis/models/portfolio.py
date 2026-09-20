@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 from finance_analysis.analysis.risk import calculate_sharpe_ratio
+from finance_analysis.exceptions import InvalidPortfolioError
 from finance_analysis.models.stock import StockData
 
 class Portfolio:
@@ -19,19 +20,19 @@ class Portfolio:
         weight_sum = sum(stocks.values())
 
         if not stocks:
-            raise ValueError("投资组合不能为空")
+            raise InvalidPortfolioError("投资组合不能为空")
 
         if not np.isclose(weight_sum,1):
-            raise ValueError("权重和必须为1")
+            raise InvalidPortfolioError("权重和必须为1")
 
         for weight in stocks.values():
 
             if weight < 0:
-                raise ValueError("权重不能小于0")
+                raise InvalidPortfolioError("权重不能小于0")
             
         self.stocks = stocks
 
-            # 缓存组合收益率
+        # 缓存组合收益率（算过一次就复用）
         self._returns: pd.Series | None = None
 
 
