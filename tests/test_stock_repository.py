@@ -71,3 +71,11 @@ def test_database_error_wrapped(db_path: str) -> None:
     repo.db.drop_table("stock_price")
     with pytest.raises(DatabaseError):
         repo.get_stock("600519")
+
+
+def test_get_all_symbols_database_error_wrapped(db_path: str) -> None:
+    """取符号列表同样翻译异常：表被删 → DatabaseError"""
+    repo = StockRepository(db_path)
+    repo.db.drop_table("stock_price")
+    with pytest.raises(DatabaseError):
+        repo.get_all_symbols()
