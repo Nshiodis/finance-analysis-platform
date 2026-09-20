@@ -4,6 +4,8 @@
 
 > 中文版见 [README.md](README.md)。This is a learning project: it started as plain Pandas scripts and was refactored step by step into a layered service (indicators / risk / portfolio / performance) with logging, configuration management, tests and containerization. The full learning log is in [AGENTS.md](AGENTS.md) (Chinese).
 
+> **Status**: v1.0.0 was frozen on 2026-09-20 and the project is now in **maintenance mode**. To pick it up again, see [docs/ROADMAP.md](docs/ROADMAP.md); for interview / internship storytelling, see [docs/PROJECT_STORY.md](docs/PROJECT_STORY.md) (both in Chinese).
+
 ---
 
 ## What it does
@@ -212,6 +214,8 @@ Two things to note:
 | --- | --- |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Layers, full request path, database design, key decisions (Chinese) |
 | [docs/API.md](docs/API.md) | Endpoint reference, parameters, real responses, error codes (Chinese) |
+| [docs/ROADMAP.md](docs/ROADMAP.md) | Freeze note, how to revive the project, candidate next steps, release flow (Chinese) |
+| [docs/PROJECT_STORY.md](docs/PROJECT_STORY.md) | One-page project story for interviews: three talking lengths, key decisions, pitfalls, memorizable numbers (Chinese) |
 | [AGENTS.md](AGENTS.md) | Learning roadmap (Day1–Day35) and daily progress (Chinese) |
 | http://127.0.0.1:8000/docs | Auto-generated interactive docs — click and try |
 

@@ -2,8 +2,8 @@
 
 ## 项目简介
 
-金融数据分析学习平台。当前完成到 **Day35：工程 Review 与 v1.0**（已打 tag **`v1.0.0`**：八维度走查 + 修复，59 测试全绿、核心层覆盖率 99%、pyright strict 0 错误；版本号同步为 `1.0.0`）。
-下一步待定（v1.0 之后的候选项见文末"学习路线规划"）。
+金融数据分析学习平台。**v1.0.0 已封版（2026-09-20），项目进入维护模式**：八维度走查 + 修复完成，59 测试全绿、核心层覆盖率 99%、pyright strict 0 错误，版本号 `1.0.0`，tag 已推远端。
+**下次开工前的入口先看 [docs/ROADMAP.md](docs/ROADMAP.md)**（复活流程 / 候选项 / 发版流程）；面试讲述素材在 [docs/PROJECT_STORY.md](docs/PROJECT_STORY.md)。维护模式下默认不新增功能。
 
 ## 开始任务前必读
 
@@ -43,6 +43,8 @@ README.md               # 项目是什么 / 怎么跑 / 怎么测 / 怎么配（
 README.en.md            # README 的英文版（双语：两份文件顶部互相跳转）
 docs/ARCHITECTURE.md    # 分层架构 / 请求全链路 / 数据库设计 / 关键设计决策
 docs/API.md             # 接口清单 / 参数 / 真实响应示例 / 错误码表
+docs/ROADMAP.md         # 封版说明 / 复活流程 / 候选项 / 发版流程（维护模式的入口）
+docs/PROJECT_STORY.md   # 一页纸项目讲述（面试 / 实习用）
 
 tests/                  # 只放 pytest 真测试（单元 / 集成 / 接口，59 个用例）
 examples/               # 早期练习脚本 + 数据库/分析 demo（不被 pytest 收集，不参与 pyright）
@@ -260,6 +262,7 @@ pyproject.toml          # version = 1.0.0；pytest-cov / pyright strict 配置
 - tag：`v1.0.0`（annotated tag）
 - 推送：`git push origin main --follow-tags` → 远端 `3689a7f..c6e21b4`（8 个提交，快进）+ 新 tag `v1.0.0`；本机 push 前要先开代理（`http.proxy` 指向 `127.0.0.1:7890`，代理没开时 git 报 `Failed to connect to github.com port 443`）
 - 清理：开发库里由"伪测试"建出来的垃圾表 `test_stock_price` 已 `DROP`（`stock_price` 4365 行、`portfolio` 38 行未受影响）
+- 封版归档（2026-09-20）：新增 `docs/ROADMAP.md`（状态 + 复活流程 + 候选项 + 维护检查 + 发版流程）与 `docs/PROJECT_STORY.md`（面试一页纸：三档讲法 / 四个决策 / 四个坑 / 可背数字 / 预判追问）；两份 README 顶部加状态行与文档导航条目；项目转入**维护模式**，默认零投入（每 2 个月有 20 分钟空闲才验活，跳过不算失败）
 
 ### 明确不修的技术债（已写进 ARCHITECTURE.md"已知边界"）
 

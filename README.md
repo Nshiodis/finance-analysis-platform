@@ -2,6 +2,8 @@
 
 > **中文** · [English](README.en.md)
 
+> **状态**：v1.0.0 已封版（2026-09-20），当前为**维护模式**。想回来接着做看 [docs/ROADMAP.md](docs/ROADMAP.md)（含复活流程），面试/实习讲述用 [docs/PROJECT_STORY.md](docs/PROJECT_STORY.md)。
+
 **金融数据分析学习平台** —— 把 A 股日线行情变成一套可调用、可测试、可部署的 REST API。
 
 这是一个从「Pandas 脚本」一路重构出来的学习项目：先做数据分析（指标 / 风险 / 组合 / 绩效），
@@ -211,6 +213,8 @@ curl.exe http://127.0.0.1:8000/portfolios/38/performance
 | --- | --- |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | 分层架构、一次请求的完整链路、数据库设计、关键设计决策 |
 | [docs/API.md](docs/API.md) | 接口清单、参数说明、真实示例、错误码表 |
+| [docs/ROADMAP.md](docs/ROADMAP.md) | 封版说明、回来时的复活流程、候选项、"发下一个版本"的流程 |
+| [docs/PROJECT_STORY.md](docs/PROJECT_STORY.md) | 一页纸项目讲述（面试 / 实习用）：三档讲法、关键决策、踩坑、可背数字 |
 | [AGENTS.md](AGENTS.md) | 学习路线（Day1–Day35）与每日进度记录 |
 | http://127.0.0.1:8000/docs | FastAPI 自动生成的交互式文档，可以直接点着试 |
 
