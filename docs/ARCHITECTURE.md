@@ -156,6 +156,8 @@ CREATE TABLE portfolio (
 | Pyright strict + 本地 `typings/` | 类型问题在写代码时就暴露；三方库缺注解用 stub 补，业务代码零 `# pyright: ignore` | `pyproject.toml`、`typings/` |
 | 多阶段 Dockerfile + 数据卷 | 依赖层可缓存、镜像只带运行时；SQLite 放卷里，容器重建数据不丢 | `Dockerfile`、`docker-compose.yml` |
 | `exec uvicorn` 收尾 entrypoint | 让 uvicorn 成为 PID 1，才能正确收到 `docker stop` 的信号 | `docker/entrypoint.sh` |
+| `DatabaseManager` 统一用 `_connect()` 上下文管理器 | 连接必须保证关闭（异常路径也不能漏），把 `close()` 收成一处而不是十几个方法各写一遍 | `database/manager.py` |
+| 模型层抛领域异常（`InvalidPortfolioError`） | 校验失败统一是 `AppError` 子类，处理器才能给出统一的 `{code, message}` | `models/portfolio.py` |
 
 ## 日志与可观测性
 
@@ -167,22 +169,28 @@ CREATE TABLE portfolio (
 
 ## 测试策略
 
-测试金字塔，`tests/` 下共 53 个用例：
+测试金字塔，`tests/` 下共 59 个用例（核心层覆盖率 99%）：
 
 | 层次 | 文件 | 做法 |
 | --- | --- | --- |
-| 单元 | `test_stock_service.py`、`test_portfolio_service.py`、`test_logging.py` 等 | mock 掉 Repository，只测业务编排与分支 |
-| 集成 | `test_stock_repository.py`、`test_portfolio_repository.py`、`test_init_db.py` 等 | 用 `tmp_path` 建真实临时 SQLite，不碰开发库 |
+| 单元 | `test_stock_service.py`、`test_portfolio_service.py`、`test_logging.py`、`test_config.py` | mock 掉 Repository，只测业务编排与分支 |
+| 集成 | `test_stock_repository.py`、`test_portfolio_repository.py`、`test_db_manager.py`、`test_init_db.py` | 用 `tmp_path` 建真实临时 SQLite，不碰开发库 |
 | 接口 | `test_api.py` | `TestClient` 打真实路由，覆盖正常 / 边界 / 错误响应 |
 
 `tests/conftest.py` 的 session 级 fixture 会把 `settings.database_path` 指向临时库并用真实 CSV 灌数据，测试结束再恢复。
 
+两条纪律（Day35 走查补的）：
+
+- `tests/` 里只放真测试：文件名 `test_*.py` 会被 pytest **在收集阶段 import**，顶层代码当场执行。曾经有 10 个"叫 test 的工具脚本"因此把数据灌进开发库，现在它们都在 `examples/` 里
+- 想验证"测试没碰开发库"，看 `database/finance.db` 的修改时间：跑 `pytest --collect-only` 前后应当不变
+
 ## 已知边界与后续
 
-Day35 工程走查时值得处理的：
+v1.0 之后仍然摆着的问题（诚实清单）：
 
-- `DatabaseManager.connect()` 返回的连接靠调用方手动 `close()`，异常路径下可能泄漏（测试里已出现 `ResourceWarning: unclosed database`），可改成 `contextlib.closing` 或上下文管理器
-- 根目录 `main.py` 是空文件（历史遗留）
-- `examples/` 是 Day1–19 的练习脚本，不在 pyright 检查范围内
+- `StockData.from_database()` 与 `StockService._get_stock_data()` 各有一份"空结果 → 404"的实现；而且 model 会自己 `new StockRepository`，导致这条路径没法像 `service.repository` 那样被 mock。要拆得先把"取数"从 model 里摘出去
+- `analysis/indicators.py` 在 `method` 参数非法时裸抛 `ValueError`（只有内部调用能触发，API 到不了）
 - 组合绩效只支持全历史区间；`/portfolios/{id}/performance` 没有日期参数
+- `examples/`（Day1–19 练习脚本 + Day20–21 数据库 demo）不在 pyright 检查范围、也不被 pytest 收集——文件名故意不带 `test_` 前缀
+- `visualization/` 的函数内部会 `plt.show()`，自动化场景要先设 `MPLBACKEND=Agg`
 - 无鉴权、无限流、无分页；SQLite 单文件适合单实例，要多副本得换 PostgreSQL

@@ -62,7 +62,7 @@ finance-analysis-platform/
 ├── docker/entrypoint.sh      # 容器入口：先灌库，再 exec uvicorn
 ├── docs/                     # ARCHITECTURE.md（架构）/ API.md（接口手册）
 ├── typings/                  # 本地类型 stub（pyright strict 用）
-├── examples/                 # Day1–19 的练习脚本（历史遗留，不在检查范围）
+├── examples/                 # 早期练习脚本 + 数据库/分析 demo（不参与 pytest 与 pyright）
 ├── Dockerfile
 ├── docker-compose.yml
 ├── pyproject.toml            # 打包 / pytest / pyright 配置
@@ -157,7 +157,7 @@ curl.exe http://127.0.0.1:8000/portfolios/38/performance
 ## 测试与类型检查
 
 ```powershell
-# 全部测试：53 个用例（单元 / 集成 / 接口三层），核心层覆盖率 93%
+# 全部测试：59 个用例（单元 / 集成 / 接口三层），核心层覆盖率 99%
 .venv\Scripts\python.exe -m pytest
 
 # 只跑接口测试

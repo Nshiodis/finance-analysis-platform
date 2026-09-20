@@ -58,7 +58,7 @@ finance-analysis-platform/
 ├── docker/entrypoint.sh      # Container entry: load the DB, then exec uvicorn
 ├── docs/                     # ARCHITECTURE.md (design) / API.md (endpoint reference)
 ├── typings/                  # Local type stubs (for pyright strict)
-├── examples/                 # Day1-19 practice scripts (legacy, excluded from type checks)
+├── examples/                 # early practice scripts + DB/analysis demos (not collected by pytest, not type-checked)
 ├── Dockerfile
 ├── docker-compose.yml
 ├── pyproject.toml            # Packaging / pytest / pyright configuration
@@ -158,7 +158,7 @@ Full endpoint list, parameters, real responses and error codes: [docs/API.md](do
 ## Tests and type checking
 
 ```powershell
-# All tests: 53 cases (unit / integration / API). Core-layer coverage: 93%
+# All tests: 59 cases (unit / integration / API). Core-layer coverage: 99%
 .venv\Scripts\python.exe -m pytest
 
 # API tests only

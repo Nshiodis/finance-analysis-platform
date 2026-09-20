@@ -2,8 +2,8 @@
 
 ## 项目简介
 
-金融数据分析学习平台。当前完成到 **Day34：项目文档**（README.md + docs/ARCHITECTURE.md + docs/API.md，已按"新环境照着文档能跑起来"实测验收）。
-下一步 **Day35：工程 Review 与 v1.0**（代码走查 → 全量 pytest → 打 tag `v1.0.0`；完整路线见文末"学习路线规划"）。
+金融数据分析学习平台。当前完成到 **Day35：工程 Review 与 v1.0**（已打 tag **`v1.0.0`**：八维度走查 + 修复，59 测试全绿、核心层覆盖率 99%、pyright strict 0 错误；版本号同步为 `1.0.0`）。
+下一步待定（v1.0 之后的候选项见文末"学习路线规划"）。
 
 ## 开始任务前必读
 
@@ -23,12 +23,12 @@
 ```
 src/finance_analysis/
 ├── config.py           # 集中配置：Settings(BaseSettings) + settings 单例（字段默认值可被 .env / FINANCE_* 环境变量覆盖）
-├── exceptions.py       # 异常体系（AppError 基类 + 4 个子类，携带 status_code / code）
+├── exceptions.py       # 异常体系（AppError 基类 + 6 个子类，携带 status_code / code）
 ├── api/                # FastAPI 应用（app.py：include_router + 统一异常处理器 + 旧路径 deprecated；middleware.py：请求日志中间件；routers/stocks.py / portfolios.py：APIRouter；dependencies.py：依赖注入；schemas.py：响应模型）
 ├── services/           # StockService / PortfolioService（业务编排）
 ├── models/             # StockData / StockPool / Portfolio（业务对象）
 ├── repository/         # StockRepository / PortfolioRepository（数据访问层，业务层不直接碰 SQLite）
-├── database/           # manager.py（DatabaseManager）/ loader.py（DatabaseLoader）
+├── database/           # manager.py（DatabaseManager，连接走 _connect() 上下文管理器）/ loader.py（DatabaseLoader）/ init_db.py（建表+灌库入口）
 ├── analysis/           # indicators / risk / evaluation / benchmark
 ├── data/               # download_stock.py
 ├── utils/              # logger.py（setup_logging）/ utils.py（load_csv / save_csv / save_plot）
@@ -43,6 +43,10 @@ README.md               # 项目是什么 / 怎么跑 / 怎么测 / 怎么配（
 README.en.md            # README 的英文版（双语：两份文件顶部互相跳转）
 docs/ARCHITECTURE.md    # 分层架构 / 请求全链路 / 数据库设计 / 关键设计决策
 docs/API.md             # 接口清单 / 参数 / 真实响应示例 / 错误码表
+
+tests/                  # 只放 pytest 真测试（单元 / 集成 / 接口，59 个用例）
+examples/               # 早期练习脚本 + 数据库/分析 demo（不被 pytest 收集，不参与 pyright）
+pyproject.toml          # version = 1.0.0；pytest-cov / pyright strict 配置
 ```
 
 ## 进度记录
@@ -87,6 +91,8 @@ docs/API.md             # 接口清单 / 参数 / 真实响应示例 / 错误码
   - 提交：`fix: create stock_price table explicitly instead of inferring from first CSV` / `build: containerize the API with multi-stage Dockerfile and compose` / `test: lock stock_price schema and init_db idempotency` / `build: cache pip wheels and use a domestic PyPI mirror`
 - Day34（已完成）：项目文档（README.md 重写：功能一览 / 技术栈 / 目录结构 / 本地与 Docker 两种跑法 / 测试与类型检查 / 配置表 / 数据来源；docs/ARCHITECTURE.md：分层图 + 每层"该做/不该做" + 一次请求的 10 步全链路 + 表结构 DDL + 10 条关键决策 + 已知边界；docs/API.md：7 个接口的参数表 / 真实响应 / 错误码全表 + 端到端 curl 序列；验收 = 复制到临时目录 + 全新 venv 按文档跑通，53 全绿、覆盖率 93%、pyright strict 0）
   - 提交：`docs: add README, architecture and API documentation`
+- Day35（已完成）：工程 Review 与 v1.0（八维度走查发现问题 1 个严重的 + 若干技术债：`tests/` 里 10 个"伪测试"脚本在 pytest 收集阶段就执行、还把数据写进开发库；连接泄漏；空 `main.py`；死代码 `create_unique_index`；`download_stock.py` 残留 print + 硬编码目录；Service/Model 重复组装；model 裸抛 ValueError。修复后 **59 全绿、核心层覆盖率 93% → 99%**、pyright strict 0；版本号 `1.0.0`；**tag `v1.0.0`**）
+  - 提交：`fix: isolate test collection from the dev database` / `refactor: use a connection context manager in DatabaseManager` / `refactor: dedupe service metrics and use domain errors in models` / `test: cover database manager and repository error paths` / `chore: drop dead code, replace prints with logging, bump version to 1.0.0` / `docs: update architecture and README for v1.0`
 
 ## 约定与注意事项
 
@@ -213,6 +219,52 @@ docs/API.md             # 接口清单 / 参数 / 真实响应示例 / 错误码
 - 测试：53 全绿，覆盖率 93%，pyright strict 0 错误
 - 提交：`docs: add README, architecture and API documentation`
 
+## Day35（已完成）
+
+### 走查的八个维度
+
+重复 / 命名 / 注解 / 异常 / 日志 / 测试 / 配置 / 文档，逐维度过一遍代码 + `rg` 全仓库搜证据，最后用"跑一遍"验证结论。
+
+### 最严重的一条：跑 pytest 会改写开发库
+
+- 现象：`tests/` 里有 10 个文件叫 `test_*.py`，但它们**不是测试**，是模块级脚本（其中 5 个连 `if __name__ == "__main__"` 守卫都没有）——pytest 在**收集阶段 import** 这些文件时，顶层代码当场执行
+- 证据：只跑 `pytest --collect-only`（一条测试都不执行），`database/finance.db` 的修改时间从 `16:06:14` 变成 `16:06:42`
+- 影响：原来的 `tests/test_db_loader.py` 会把 `300750.csv` 灌进 `settings.database_path`（收集阶段 = 开发库），`tests/test_db_manager.py` 还在开发库里留下一张垃圾表 `test_stock_price`（实测表清单里确实有它）
+- 修复：10 个 demo 脚本移到 `examples/` 并改名 `*_demo.py`（`tests/` 只留 pytest 真测试）；`tests/` 的文件名从此不出现"假 test"
+- 验证：修完再跑 `pytest` 与 `--collect-only`，开发库 mtime 不变 ✅
+- 教训：**文件名 `test_*.py` = 我保证这是测试**；工具脚本放 `tests/` 会被 pytest import 并执行，`testpaths` 只是限制收集范围，挡不住 import
+
+### 其余修复
+
+1. 连接泄漏：`DatabaseManager` 所有操作改走 `_connect()` 上下文管理器（`@contextmanager` + `finally: conn.close()`），异常路径也不漏；测试里的 `ResourceWarning: unclosed database` 消失
+2. pyright 抓到的真问题：`@contextmanager` 的返回注解写 `Iterator[x]` 已被弃用 → 改成 `Generator[sqlite3.Connection]`
+3. 死代码：`DatabaseManager.create_unique_index()`（UNIQUE 早已写进建表 DDL、无人调用）、根目录空 `main.py`
+4. `data/download_stock.py`：4 处 `print` → `logger`；硬编码 `Path(__file__).parents[3]/"data"` → `settings.data_path` + `mkdir(parents=True, exist_ok=True)`
+5. 重复：`StockService` 抽出 `_risk_metrics()`，行情接口与风险接口共用同一份四件套组装
+6. 异常一致性：`models/portfolio.py` 3 处裸 `ValueError` → `InvalidPortfolioError`（它是 `ValueError` 子类，旧测试不受影响）
+7. 可读性：`analysis/evaluation.py` 的括号换行重排；`summary()` 里三次 `calculate_total_return()` 收敛成局部变量
+8. 版本：`pyproject.toml` `0.1.0` → `1.0.0`
+
+### 测试账
+
+- 新增 `tests/test_db_manager.py` ×4（`read_dataframe` 往返 / 显式建表 11 列 / `drop_table` 幂等 / 连接失败记日志并抛出）
+- `tests/test_stock_repository.py` 补 `get_all_symbols` 的 `DatabaseError` 翻译
+- `tests/test_stock_service.py` 补"带了日期区间、但全量也空 → 仍是 `StockNotFoundError`"
+- 53 → **59 个**；覆盖率 93% → **99%**（`manager.py` / `stock_repository.py` / `stock_service.py` 三个文件 100%）
+
+### 验收证据
+
+- pytest：59 passed；pyright strict：0 错误
+- 本地冒烟：`/stocks`、`/stocks/600519`（rows=1455、latest_close=1377.18）、`/risk`、`indicators`（window=20 → 1436、window=5 → 1451）、2024 区间（242 行）、`/portfolios/1/performance`、404/422 三种错误、旧路径 200 —— **与 Day34 文档里的数字完全一致**（重构没改行为）
+- 容器：`docker compose up -d --build` 重建 → `Up (healthy)` → 容器内 `/stocks/600519`、`/portfolios/2/performance` 数字一致（跑的是新代码）
+- tag：`v1.0.0`（annotated tag）
+
+### 明确不修的技术债（已写进 ARCHITECTURE.md"已知边界"）
+
+- `StockData.from_database()` 与 `StockService._get_stock_data()` 各有一份"空 → 404"逻辑，且 model 自建 `StockRepository` 导致该路径无法被 mock
+- `analysis/indicators.py` 的裸 `ValueError`（API 不可达，只有内部调用会触发）
+- 组合绩效无日期参数；无鉴权 / 限流 / 分页；SQLite 单实例
+
 ## 学习路线规划（Day25–Day35）
 
 > 阶段定位：Day1–19 是"我会什么"，Day20–24 是"我怎么把它组织起来"，Day25–35 是"把它做成别人能调用、测试、部署的软件"。
@@ -236,7 +288,14 @@ Router → Service → Repository → Database
 - **Day32 配置与环境管理**（已完成）：引入 pydantic-settings + `.env`；按 development / testing / production 区分配置；测试用独立临时数据库。验收：改环境变量即可切换环境，代码里无硬编码路径。
 - **Day33 Docker 化**（已完成）：Dockerfile（多阶段构建）+ docker-compose。目标：`docker compose up` → `/docs` 可访问。验收：新环境一条命令启动。
 - **Day34 项目文档**（已完成）：README.md（项目是什么 / 如何运行 / 如何测试）+ docs/ARCHITECTURE.md（分层与数据流图）+ docs/API.md（接口清单与示例）。验收：照着文档能在新环境跑起来 —— 已在临时目录 + 全新 venv 实测通过。
-- **Day35 工程 Review 与 v1.0**：代码走查（重复 / 命名 / 注解 / 异常 / 日志 / 测试 / 配置 / 文档）→ 全量 pytest → 打 tag `v1.0.0`。验收：checklist 全过、Git clean。
+- **Day35 工程 Review 与 v1.0**（已完成）：代码走查（重复 / 命名 / 注解 / 异常 / 日志 / 测试 / 配置 / 文档）→ 修复 → 全量 pytest（59 全绿、覆盖率 99%）→ 打 tag `v1.0.0`。验收：checklist 全过、Git clean。
+
+### v1.0 之后的候选项（还没排期）
+
+- 数据面：换 PostgreSQL（多实例）、加定时任务把行情增量入库
+- 接口面：组合绩效支持日期区间、加 `/health`、分页与限流、鉴权（API Key / OAuth）
+- 工程面：pyright 之外再上 ruff（lint + format）、GitHub Actions 跑 pytest/镜像构建、把 `StockData.from_dataframe` 里的取数依赖拆掉
+- 业务面：把 AI 财务摘要（原 Roadmap 里的 "AI Financial Report"）接进来
 
 ### 贯穿原则
 
