@@ -2,8 +2,8 @@
 
 ## 项目简介
 
-金融数据分析学习平台。当前完成到 **Day33：Docker 化**（多阶段 Dockerfile + docker-compose + 数据卷持久化 + 容器启动自动灌库）。
-下一步 **Day34：项目文档**（完整路线见文末"学习路线规划"）。
+金融数据分析学习平台。当前完成到 **Day34：项目文档**（README.md + docs/ARCHITECTURE.md + docs/API.md，已按"新环境照着文档能跑起来"实测验收）。
+下一步 **Day35：工程 Review 与 v1.0**（代码走查 → 全量 pytest → 打 tag `v1.0.0`；完整路线见文末"学习路线规划"）。
 
 ## 开始任务前必读
 
@@ -38,6 +38,11 @@ Dockerfile              # 两阶段构建（builder 装依赖 → final 只带 /
 docker-compose.yml      # api 服务：端口映射 / .env / finance-data 数据卷 / healthcheck
 .dockerignore           # 构建上下文瘦身（排除 .venv/.git/.env/database/tests 等）
 docker/entrypoint.sh    # 容器入口：先 init_db 灌库，再 exec uvicorn
+
+README.md               # 项目是什么 / 怎么跑 / 怎么测 / 怎么配（面向第一次打开仓库的人）
+README.en.md            # README 的英文版（双语：两份文件顶部互相跳转）
+docs/ARCHITECTURE.md    # 分层架构 / 请求全链路 / 数据库设计 / 关键设计决策
+docs/API.md             # 接口清单 / 参数 / 真实响应示例 / 错误码表
 ```
 
 ## 进度记录
@@ -80,6 +85,8 @@ docker/entrypoint.sh    # 容器入口：先 init_db 灌库，再 exec uvicorn
   - 提交：`feat: add pydantic-settings config and isolated test database`
 - Day33（已完成）：Docker 化（多阶段 Dockerfile；.dockerignore；entrypoint 先 init_db 灌库再 exec uvicorn；docker-compose 管端口 / .env / finance-data 数据卷 / healthcheck；create_stock_price_table 显式建表修掉"表结构依赖第一个 CSV"的真 bug；pip 缓存挂载 + 清华源把依赖安装从 220s 压到 28s；53 全绿、覆盖率 93%、pyright strict 0）
   - 提交：`fix: create stock_price table explicitly instead of inferring from first CSV` / `build: containerize the API with multi-stage Dockerfile and compose` / `test: lock stock_price schema and init_db idempotency` / `build: cache pip wheels and use a domestic PyPI mirror`
+- Day34（已完成）：项目文档（README.md 重写：功能一览 / 技术栈 / 目录结构 / 本地与 Docker 两种跑法 / 测试与类型检查 / 配置表 / 数据来源；docs/ARCHITECTURE.md：分层图 + 每层"该做/不该做" + 一次请求的 10 步全链路 + 表结构 DDL + 10 条关键决策 + 已知边界；docs/API.md：7 个接口的参数表 / 真实响应 / 错误码全表 + 端到端 curl 序列；验收 = 复制到临时目录 + 全新 venv 按文档跑通，53 全绿、覆盖率 93%、pyright strict 0）
+  - 提交：`docs: add README, architecture and API documentation`
 
 ## 约定与注意事项
 
@@ -91,6 +98,7 @@ docker/entrypoint.sh    # 容器入口：先 init_db 灌库，再 exec uvicorn
 - 容器启动（本机）：`wsl -d rancher-desktop -u root -- sh -c "cd /mnt/d/03_Dev/Develop/Projects/finance-analysis-platform && docker compose up -d --build"`；验证 `curl.exe http://127.0.0.1:8000/docs`。Docker Desktop 的 Windows↔WSL 桥在本机坏了，所以 docker 命令一律进 rancher-desktop 虚拟机执行
 - CLI 类型检查：`.venv\Scripts\python.exe -m pyright --pythonpath .venv\Scripts\python.exe src tests`（不加 `--pythonpath` 时 pyright 解析不到三方包，会报成百上千条假错误；`examples/` 是历史遗留目录，不在检查范围）
 - 输出产物（`output/`、`*.png`、`*.log`）不入库（.gitignore 已配置）
+- README 双语：`README.md`（中文，默认）与 `README.en.md`（英文）是**同一份内容的两版**，改一版必须同步改另一版；两份文件顶部都有语言切换链接
 - 笔记要求：每天写 Obsidian 笔记（日志 + 主题）时必须包含当天知识点，尤其要收录用户提问过的问题与踩过的坑（含结论），不要只写"做了什么"
 
 ## Day24（已完成）
@@ -190,6 +198,21 @@ docker/entrypoint.sh    # 容器入口：先 init_db 灌库，再 exec uvicorn
 - 坑：容器默认走 UTC，日志时间比本地少 8 小时（要让日志显示本地时间得给容器设 TZ）
 - 测试：51 → 53 全绿（+2 个 init_db 回归测试），覆盖率 93%，pyright strict 0 错误
 - 提交：`fix: create stock_price table explicitly instead of inferring from first CSV` / `build: containerize the API with multi-stage Dockerfile and compose` / `test: lock stock_price schema and init_db idempotency` / `build: cache pip wheels and use a domestic PyPI mirror`
+## Day34（已完成）
+
+- 三份文档的分工（按"读者是谁"分，不按"内容多少"分）：README = 项目是什么 + 5 分钟跑起来（读者：第一次打开仓库的人）；ARCHITECTURE.md = 代码为什么这么分、请求怎么走完全程（读者：要改代码的人）；API.md = 每个接口的参数/返回/错误码（读者：调用方）
+- README：功能一览表 + 技术栈 + 目录结构树 + 快速开始（本地 / Docker 两套）+ 测试与类型检查 + 配置环境变量表 + 数据来源与"怎么加新股票" + 文档导航
+- ARCHITECTURE.md：mermaid 分层图（Router → Service → Repository → Database，旁挂 Models/Analysis/Schemas/Exceptions/Config）+ 每层职责与纪律表（"该做的事 / 不该做的事"）+ 以 `GET /stocks/600519/indicators?window=20` 为例的 10 步全链路 + 文件级目录树 + 两张表 DDL 与设计取舍 + 10 条关键设计决策 + 日志/测试策略 + 已知边界
+- API.md：7 个接口（含废弃的 `/stock/{symbol}`）的方法/路径/参数表/真实响应；错误码总表（`STOCK_NOT_FOUND` / `STOCK_NO_DATA` / `INVALID_DATE_RANGE` / `PORTFOLIO_NOT_FOUND` / `INVALID_PORTFOLIO` / `DATABASE_ERROR` / `VALIDATION_ERROR`）；端到端 curl 序列
+- 文档里的所有示例都是**真跑出来的响应**，不是手写的：`/stocks/600519` rows=1455、`window=20` rows=1436、`window=5` rows=1451、权重 0.4/0.3/0.3 的组合收益 0.7196 vs 基准 0.1150（超额 0.6045）
+- 验收方法（今天最有价值的一步）：`robocopy` 把仓库复制到临时目录（排除 .venv/.git/database）→ `python -m venv .venv` → `pip install -r requirements.txt`（115s）→ `pip install -e .` → `Copy-Item .env.example .env` → `python -m finance_analysis.database.init_db` → uvicorn → 逐个 curl 与文档对齐。结论：新环境照着 README 确实能跑起来（5820 行 = 4 CSV × 1455，11 列，跑两遍行数不变，`/docs` `/redoc` `/openapi.json` 全 200）
+- Docker 路径复验（2026-09-20 补）：按 README 的 Docker 章节逐字跑通 —— `docker compose up -d --build`（层缓存命中，5s）→ `docker compose ps` 显示 `Up (healthy)`（healthcheck 探 `/docs`）→ Windows 侧 `curl.exe http://127.0.0.1:8000/docs` 200、`/stocks/600519` rows=1455（与本地 venv 结果一致）→ 容器内 `docker exec ... python -c` 查卷里数据库：`stock_price` 5820 行 → 新建组合 id=2 → `docker compose down`（删容器 + 网络）→ `up -d` → 再查 `id=2` 绩效仍在（验证 README 的"down 之后 up，数据还在"）→ `docker logs` 显示 `Started server process [1]`（entrypoint 的 `exec` 生效，uvicorn 是 PID 1）。未验：`docker compose down -v`（会真的删数据，需用户点头）
+- 真问题（写文档才发现）：本机 `python` 命中的是 **Microsoft Store 别名桩**（`C:\Users\123\AppData\Local\Microsoft\WindowsApps\python.exe`），`python --version` 什么都不打印、`python -m venv .venv` 静默失败；本机真正能用的是 `D:\03_Dev\Develop\Tools\Python3.13\python.exe`（`.venv\pyvenv.cfg` 里的 home 也指向它）。`py -3.13` 也在报 `Unable to create process`（注册表里的 `D:\Python\python.exe` 已不存在）。→ README 第 0 步加"先 `python --version` 确认能打印版本"，并给出完整路径的兜底写法
+- 验证脚本的坑：`robocopy /XD database` 会**误伤任意层级的同名目录**，把 `src/finance_analysis/database` 一起排除了 → `ModuleNotFoundError: No module named 'finance_analysis.database'`。按目录名排除时要确认是不是只想排除顶层
+- API 文档里 `POST /portfolios` 的 id 是自增值（开发库示例是 38，新环境第一次是 1），已在文档里注明"以接口返回为准"；`GET /stocks` 在灌了 `000300.csv` 的环境会返回 4 个代码（示例已按新环境输出修正）
+- 测试：53 全绿，覆盖率 93%，pyright strict 0 错误
+- 提交：`docs: add README, architecture and API documentation`
+
 ## 学习路线规划（Day25–Day35）
 
 > 阶段定位：Day1–19 是"我会什么"，Day20–24 是"我怎么把它组织起来"，Day25–35 是"把它做成别人能调用、测试、部署的软件"。
@@ -212,7 +235,7 @@ Router → Service → Repository → Database
 - **Day31 日志与可观测性**（已完成）：请求日志中间件（method / path / status / 耗时）；分层日志（INFO 查询参数、WARNING 未命中、ERROR 数据库失败）；不记录敏感信息。验收：一条请求在日志里可完整追踪。
 - **Day32 配置与环境管理**（已完成）：引入 pydantic-settings + `.env`；按 development / testing / production 区分配置；测试用独立临时数据库。验收：改环境变量即可切换环境，代码里无硬编码路径。
 - **Day33 Docker 化**（已完成）：Dockerfile（多阶段构建）+ docker-compose。目标：`docker compose up` → `/docs` 可访问。验收：新环境一条命令启动。
-- **Day34 项目文档**：README.md（项目是什么 / 如何运行 / 如何测试）+ ARCHITECTURE.md（分层与数据流图）+ API.md（接口清单与示例）。验收：照着文档能在新环境跑起来。
+- **Day34 项目文档**（已完成）：README.md（项目是什么 / 如何运行 / 如何测试）+ docs/ARCHITECTURE.md（分层与数据流图）+ docs/API.md（接口清单与示例）。验收：照着文档能在新环境跑起来 —— 已在临时目录 + 全新 venv 实测通过。
 - **Day35 工程 Review 与 v1.0**：代码走查（重复 / 命名 / 注解 / 异常 / 日志 / 测试 / 配置 / 文档）→ 全量 pytest → 打 tag `v1.0.0`。验收：checklist 全过、Git clean。
 
 ### 贯穿原则
