@@ -258,6 +258,8 @@ pyproject.toml          # version = 1.0.0；pytest-cov / pyright strict 配置
 - 本地冒烟：`/stocks`、`/stocks/600519`（rows=1455、latest_close=1377.18）、`/risk`、`indicators`（window=20 → 1436、window=5 → 1451）、2024 区间（242 行）、`/portfolios/1/performance`、404/422 三种错误、旧路径 200 —— **与 Day34 文档里的数字完全一致**（重构没改行为）
 - 容器：`docker compose up -d --build` 重建 → `Up (healthy)` → 容器内 `/stocks/600519`、`/portfolios/2/performance` 数字一致（跑的是新代码）
 - tag：`v1.0.0`（annotated tag）
+- 推送：`git push origin main --follow-tags` → 远端 `3689a7f..c6e21b4`（8 个提交，快进）+ 新 tag `v1.0.0`；本机 push 前要先开代理（`http.proxy` 指向 `127.0.0.1:7890`，代理没开时 git 报 `Failed to connect to github.com port 443`）
+- 清理：开发库里由"伪测试"建出来的垃圾表 `test_stock_price` 已 `DROP`（`stock_price` 4365 行、`portfolio` 38 行未受影响）
 
 ### 明确不修的技术债（已写进 ARCHITECTURE.md"已知边界"）
 
