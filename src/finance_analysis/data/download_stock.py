@@ -1,5 +1,13 @@
+import logging
 from pathlib import Path
+
 import akshare as ak
+
+from finance_analysis.config import settings
+
+
+logger = logging.getLogger(__name__)
+
 
 def download_stock(
         symbol: str,
@@ -22,11 +30,8 @@ def download_stock(
     file_name:
         保存文件名
     """
-    project_path = Path(__file__).resolve().parents[3]
-
-    data_path = project_path / "data"
-
-    data_path.mkdir(exist_ok=True)
+    data_path = Path(settings.data_path)
+    data_path.mkdir(parents=True, exist_ok=True)
 
     stock = ak.stock_zh_a_daily(
         symbol=symbol, 
@@ -35,16 +40,15 @@ def download_stock(
     )
 
     if stock.empty:
-        print("下载失败，没有数据")
+        logger.warning("下载失败，没有数据：%s", symbol)
         return
-
 
     stock.to_csv(
         data_path / file_name,
         index=False,
     )
 
-    print("下载完成")
+    logger.info("下载完成：%s", data_path / file_name)
 
 
 def download_index(
@@ -68,11 +72,8 @@ def download_index(
     file_name:
         保存文件名
     """
-    project_path = Path(__file__).resolve().parents[3]
-
-    data_path = project_path / "data"
-
-    data_path.mkdir(exist_ok=True)
+    data_path = Path(settings.data_path)
+    data_path.mkdir(parents=True, exist_ok=True)
 
     index = ak.stock_zh_index_daily_em(
         symbol,
@@ -81,19 +82,19 @@ def download_index(
     )
 
     if index.empty:
-        print("下载失败，没有数据")
+        logger.warning("下载失败，没有数据：%s", symbol)
         return
-
 
     index.to_csv(
         data_path / file_name,
         index=False,
     )
 
-    print("下载完成") 
+    logger.info("下载完成：%s", data_path / file_name)
 
 
 def main() -> None:
+    logging.basicConfig(level=logging.INFO)
 
     download_index(
         symbol="sh000300",

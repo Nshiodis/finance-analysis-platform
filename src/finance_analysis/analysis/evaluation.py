@@ -13,20 +13,12 @@ class PerformanceEvaluator:
 
 
     def get_returns(self) -> tuple[pd.Series, pd.Series]:
-        """获取收益序列"""
-
-        portfolio_return = (
-            self.portfolio.calculate_return()
-            )
-
-        benchmark_return = (
-            self.benchmark.calculate_return()
-            )
+        """获取收益序列（组合、基准）"""
 
         return (
-            portfolio_return,
-            benchmark_return
-            )
+            self.portfolio.calculate_return(),
+            self.benchmark.calculate_return(),
+        )
 
 
     def calculate_excess_return(self) -> pd.Series:
@@ -44,22 +36,13 @@ class PerformanceEvaluator:
     def summary(self) -> dict[str, float]:
         """返回性能评估摘要"""
 
+        portfolio_total_return = self.portfolio.calculate_total_return()
+        benchmark_total_return = self.benchmark.calculate_total_return()
+
         return {
-
-            "portfolio_total_return":
-                float(
-                    self.portfolio.calculate_total_return()
-                    ),
-            "benchmark_total_return":
-                float(
-                    self.benchmark.calculate_total_return()
-                    ),
-
-            "excess_total_return":
-                float(
-                    self.portfolio.calculate_total_return()
-                    -
-                    self.benchmark.calculate_total_return()
-                )
-
+            "portfolio_total_return": float(portfolio_total_return),
+            "benchmark_total_return": float(benchmark_total_return),
+            "excess_total_return": float(
+                portfolio_total_return - benchmark_total_return
+            ),
         }
